@@ -1,5 +1,6 @@
 // dashboard
 import Ecommerce from "pages/Dashboards/Ecommerce";
+import UserManagement from "pages/Dashboards/User/UserManagement";
 
 import UserProfile from "pages/Authentication/UserProfile";
 import Login from "pages/Authentication/Login";
@@ -16,18 +17,17 @@ const authProtectedRoutes: Array<RouteObject> = [
   // Dashboard
   { path: "/", component: Ecommerce },
   { path: "/dashboard", component: Ecommerce },
-  
+  { path: "/users", component: UserManagement },
+
   // profile
   { path: "/user-profile", component: UserProfile },
 ];
 
 const publicRoutes = [
-
   // authentication
   { path: "/login", component: Login },
   { path: "/logout", component: Logout },
   { path: "/register", component: Register },
-
-]
+];
 
 export { authProtectedRoutes, publicRoutes };

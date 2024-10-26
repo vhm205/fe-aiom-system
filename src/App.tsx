@@ -1,4 +1,3 @@
-import React from 'react';
 import './assets/scss/themes.scss';
 import RouteIndex from 'Routes/Index';
 

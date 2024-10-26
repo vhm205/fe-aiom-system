@@ -15,10 +15,11 @@ interface ModalProps {
 }
 
 const Modal = ({ show, onHide, children, className, placement, id, dialogClassName, as: Component = "div", ...props }: ModalProps) => {
-
+    console.log({ className, show });
+    
     return (
         <React.Fragment>
-            <div {...props} id={id ? id : "defaultModal"} className={`${className} ${!show ? "show hidden" : ""}`}>
+            <div {...props} id={id ? id : "defaultModal"} className={`${!show ? "hidden show" : ""} ${className} `}>
                 <ModalContextProvider show={show} onHide={onHide}>
                     <Component
                         className={dialogClassName ? dialogClassName : ''}

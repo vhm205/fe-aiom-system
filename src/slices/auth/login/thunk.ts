@@ -1,85 +1,79 @@
-import { postFakeLogin } from "helpers/fakebackend_helper";
 import { loginError, loginSuccess, logoutSuccess } from "./reducer";
 import { ThunkAction } from "redux-thunk";
 import { Action, Dispatch } from "redux";
 import { RootState } from "slices";
 import { getFirebaseBackend } from "helpers/firebase_helper";
+import { IHttpResponse } from "types";
+import { request } from "helpers/axios";
 
 interface User {
-    email: string;
-    password: string;
+  email: string;
+  password: string;
 }
 
-export const loginUser = (
+export const loginUser =
+  (
     user: User,
-    history: any
-): ThunkAction<void, RootState, unknown, Action<string>> => async (dispatch: Dispatch) => {
+    history: any,
+  ): ThunkAction<void, RootState, unknown, Action<string>> =>
+  async (dispatch: Dispatch) => {
     try {
-        let response: any;
-        if (process.env.REACT_APP_DEFAULTAUTH === "fake") {
+      let response: IHttpResponse | any = await request.post("/auth/login", {
+        username: user.email,
+        password: user.password,
+      });
+      if (response.statusCode !== 200) {
+        return alert(response.message);
+      }
 
-            response = await postFakeLogin({
-                email: user.email,
-                password: user.password,
-            });
+      localStorage.setItem("jwt", JSON.stringify(response.data.token));
+      localStorage.setItem("authUser", JSON.stringify(response.data.token));
 
-            localStorage.setItem("authUser", JSON.stringify(response));
-
-        } else if (process.env.REACT_APP_DEFAULTAUTH === "firebase") {
-            let fireBaseBackend = await getFirebaseBackend();
-
-            response = await fireBaseBackend.loginUser(
-                user.email,
-                user.password
-            )
-        }
-
-        if (response) {
-            dispatch(loginSuccess(response));
-            history("/dashboard");
-        }
+      if (response) {
+        dispatch(loginSuccess(response));
+        history("/dashboard");
+      }
     } catch (error) {
-
-        dispatch(loginError(error));
+      dispatch(loginError(error));
     }
-};
+  };
 
 export const logoutUser = () => async (dispatch: Dispatch) => {
-    try {
-        localStorage.removeItem("authUser");
+  try {
+    localStorage.removeItem("authUser");
 
-        let fireBaseBackend = await getFirebaseBackend();
+    let fireBaseBackend = await getFirebaseBackend();
 
-        if (process.env.REACT_APP_DEFAULTAUTH === "firebase") {
-            const response = fireBaseBackend.logout;
-            dispatch(logoutSuccess(response));
-        } else {
-            dispatch(logoutSuccess(true));
-        }
-    } catch (error) {
-        dispatch(loginError(error));
+    if (process.env.REACT_APP_DEFAULTAUTH === "firebase") {
+      const response = fireBaseBackend.logout;
+      dispatch(logoutSuccess(response));
+    } else {
+      dispatch(logoutSuccess(true));
     }
-}
+  } catch (error) {
+    dispatch(loginError(error));
+  }
+};
 
-
-export const socialLogin = (type: any, history: any) => async (dispatch: any) => {
+export const socialLogin =
+  (type: any, history: any) => async (dispatch: any) => {
     try {
-        let response: any;
+      let response: any;
 
-        if (process.env.REACT_APP_DEFAULTAUTH === "firebase") {
-            const fireBaseBackend = getFirebaseBackend();
-            response = fireBaseBackend.socialLoginUser(type);
-        }
+      if (process.env.REACT_APP_DEFAULTAUTH === "firebase") {
+        const fireBaseBackend = getFirebaseBackend();
+        response = fireBaseBackend.socialLoginUser(type);
+      }
 
-        const socialData = await response;
+      const socialData = await response;
 
-        if (socialData) {
-            sessionStorage.setItem("authUser", JSON.stringify(socialData));
-            dispatch(loginSuccess(socialData));
-            history('/dashboard');
-        }
-
+      if (socialData) {
+        sessionStorage.setItem("authUser", JSON.stringify(socialData));
+        dispatch(loginSuccess(socialData));
+        history("/dashboard");
+      }
     } catch (error) {
-        dispatch(loginError(error));
+      dispatch(loginError(error));
     }
-}
+  };
+

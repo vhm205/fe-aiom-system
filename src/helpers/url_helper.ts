@@ -142,7 +142,7 @@ export const UPDATE_SOCIAL_EVENTS = "/edit-social-event";
 export const DELETE_SOCIAL_EVENTS = "/delete-social-event";
 
 // invoice
-export const GET_INVOICE_LIST = "/get-invoice-list"
+export const GET_INVOICE_LIST = "/get-invoice-list";
 
 // Users
 // List View
@@ -156,10 +156,3 @@ export const GET_USER_GRID = "/get-usergrid";
 export const ADD_USER_GRID = "/add-usergrid";
 export const UPDATE_USER_GRID = "/edit-usergrid";
 export const DELETE_USER_GRID = "/delete-usergrid";
-
-
-
-
-
-
-

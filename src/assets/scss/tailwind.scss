@@ -9,6 +9,11 @@ File: tailwind scss File
 
 @import "fonts/fonts";
 
+@import "flatpickr/dist/flatpickr.min.css";
+// @import "leaflet/dist/leaflet.css";
+// @import "swiper/swiper-bundle.css";
+// @import "sweetalert2/dist/sweetalert2.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -16,7 +21,6 @@ File: tailwind scss File
 @import "plugins/gridjs";
 @import "plugins/select";
 @import "plugins/multi-select";
-
 
 
 .group\/menu-link:hover,

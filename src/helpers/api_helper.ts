@@ -6,10 +6,9 @@ axios.defaults.baseURL = "";
 axios.defaults.headers.post["Content-Type"] = "application/json";
 
 // content type
-const authUser: any = localStorage.getItem("authUser")
+const authUser: any = localStorage.getItem("authUser");
 const token = JSON.parse(authUser) ? JSON.parse(authUser).token : null;
-if (token)
-  axios.defaults.headers.common["Authorization"] = "Bearer " + token;
+if (token) axios.defaults.headers.common["Authorization"] = "Bearer " + token;
 
 // intercepting to capture errors
 axios.interceptors.response.use(
@@ -33,7 +32,7 @@ axios.interceptors.response.use(
         message = error.message || error;
     }
     return Promise.reject(message);
-  }
+  },
 );
 /**
  * Sets the default authorization
@@ -57,12 +56,13 @@ class APIClient {
     let paramKeys: any = [];
 
     if (params) {
-      Object.keys(params).map(key => {
-        paramKeys.push(key + '=' + params[key]);
+      Object.keys(params).map((key) => {
+        paramKeys.push(key + "=" + params[key]);
         return paramKeys;
       });
 
-      const queryString = paramKeys && paramKeys.length ? paramKeys.join('&') : "";
+      const queryString =
+        paramKeys && paramKeys.length ? paramKeys.join("&") : "";
       response = axios.get(`${url}?${queryString}`, params);
     } else {
       response = axios.get(`${url}`, params);
@@ -93,8 +93,8 @@ class APIClient {
     return axios.delete(url, { ...config });
   };
 }
-const getLoggedUser = () => {
 
+const getLoggedUser = () => {
   const user = localStorage.getItem("authUser");
   if (!user) {
     return null;
@@ -104,3 +104,4 @@ const getLoggedUser = () => {
 };
 
 export { APIClient, setAuthorization, getLoggedUser };
+
