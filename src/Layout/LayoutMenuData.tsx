@@ -13,19 +13,19 @@ const menuData: any = [
   },
   {
     id: "auth-dashboard",
-    label: "User Management",
+    label: "Quản lý người dùng",
     link: "/#",
     icon: <MonitorDot />,
     subItems: [
       {
         id: "user-auth-dashboard",
-        label: "Users",
+        label: "Người dùng",
         link: "/users",
         parentId: "auth-dashboard",
       },
       {
         id: "role-auth-dashboard",
-        label: "Roles",
+        label: "Chức vụ",
         link: "/roles",
         parentId: "auth-dashboard",
       },

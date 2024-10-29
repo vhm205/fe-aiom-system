@@ -1,4 +1,5 @@
 import { loginError, loginSuccess, logoutSuccess } from "./reducer";
+import { toast } from "react-toastify";
 import { ThunkAction } from "redux-thunk";
 import { Action, Dispatch } from "redux";
 import { RootState } from "slices";
@@ -23,15 +24,17 @@ export const loginUser =
         password: user.password,
       });
       if (response.statusCode !== 200) {
-        return alert(response.message);
+        return toast.error(response.message);
       }
 
-      localStorage.setItem("jwt", JSON.stringify(response.data.token));
-      localStorage.setItem("authUser", JSON.stringify(response.data.token));
+      localStorage.setItem("jwt", response.data.token);
+      localStorage.setItem("authUser", JSON.stringify(response.data.user));
 
       if (response) {
-        dispatch(loginSuccess(response));
-        history("/dashboard");
+        setTimeout(() => {
+          dispatch(loginSuccess(response));
+          history("/dashboard");
+        }, 500);
       }
     } catch (error) {
       dispatch(loginError(error));
@@ -40,6 +43,7 @@ export const loginUser =
 
 export const logoutUser = () => async (dispatch: Dispatch) => {
   try {
+    localStorage.removeItem("jwt");
     localStorage.removeItem("authUser");
 
     let fireBaseBackend = await getFirebaseBackend();
@@ -76,4 +80,3 @@ export const socialLogin =
       dispatch(loginError(error));
     }
   };
-

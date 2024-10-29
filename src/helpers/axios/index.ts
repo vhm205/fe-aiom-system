@@ -30,7 +30,7 @@ export const defaultConfig: IHttpRequestConfig = {
   },
 };
 
-class HttpRequest {
+export class HttpRequest {
   private config: Partial<IExtraConfig> = {};
 
   public addVersion(v: string | boolean) {
@@ -71,7 +71,10 @@ class HttpRequest {
 
     instance.interceptors.request.use(
       function (config) {
-        // Do something before request is sent
+        const token = localStorage.getItem("jwt"); // Retrieve the token from localStorage
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`; // Attach the token to the Authorization header
+        }
         return config;
       },
       function (error) {
@@ -94,11 +97,12 @@ class HttpRequest {
       function (error) {
         const resp = error.response;
         const data = resp?.data;
+        console.log({ data, resp, error });
 
-        if (data && data.path !== "/auth/check") {
-          if (resp.status === 401 || resp.statusText === "Unauthorized") {
-            window.location.replace("/login");
-          }
+        if (resp.status === 401 || resp.statusText === "Unauthorized") {
+          localStorage.removeItem("jwt");
+          localStorage.removeItem("authUser");
+          window.location.replace("/login");
         }
 
         return data;

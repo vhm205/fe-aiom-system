@@ -150,9 +150,3 @@ export const GET_USER_LIST = "/get-userlist";
 export const ADD_USER_LIST = "/add-userlist";
 export const UPDATE_USER_LIST = "/edit-userlist";
 export const DELETE_USER_LIST = "/delete-userlist";
-
-// Grid View
-export const GET_USER_GRID = "/get-usergrid";
-export const ADD_USER_GRID = "/add-usergrid";
-export const UPDATE_USER_GRID = "/edit-usergrid";
-export const DELETE_USER_GRID = "/delete-usergrid";

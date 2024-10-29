@@ -13,14 +13,14 @@ import RegisterReducer from "./auth/register/reducer";
 import ProfileReducer from "./auth/profile/reducer";
 
 // User Management Reducer
-import UserManagmentReducer from "./userManagement/reducer";
+import UserReducer from "./users/reducer";
 
 const rootReducer = combineReducers({
   Layout: LayoutReducer,
   Login: LoginReducer,
   Register: RegisterReducer,
   Profile: ProfileReducer,
-  UserManagement: UserManagmentReducer,
+  Users: UserReducer,
 });
 
 export type RootState = ReturnType<typeof rootReducer>;

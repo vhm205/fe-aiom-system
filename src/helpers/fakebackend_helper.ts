@@ -205,9 +205,3 @@ export const getUserList = () => api.get(url.GET_USER_LIST, null);
 export const addUserList = (data: any) => api.create(url.ADD_USER_LIST, data);
 export const updateUserList = (data: any) => api.update(url.UPDATE_USER_LIST, data);
 export const deleteUserList = (user: any) => api.delete(url.DELETE_USER_LIST, { headers: { user } });
-
-// Grid View
-export const getUserGrid = () => api.get(url.GET_USER_GRID, null);
-export const addUserGrid = (data: any) => api.create(url.ADD_USER_GRID, data);
-export const updateUserGrid = (data: any) => api.update(url.UPDATE_USER_GRID, data);
-export const deleteUserGrid = (user: any) => api.delete(url.DELETE_USER_GRID, { headers: { user } });

@@ -1,18 +1,31 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import BreadCrumb from "Common/BreadCrumb";
-import Flatpickr from "react-flatpickr";
-import moment from "moment";
+import { Link } from "react-router-dom";
+import { Dropdown } from "Common/Components/Dropdown";
+import TableContainer from "Common/TableContainer";
+// import Flatpickr from "react-flatpickr";
+// import moment from "moment";
+import Select from "react-select";
 
 // Icons
-import { Search, Plus, Trash2, Eye, Pencil, ImagePlus } from "lucide-react";
-
-import dummyImg from "assets/images/users/user-dummy-img.jpg";
-
-import TableContainer from "Common/TableContainer";
-import { Link } from "react-router-dom";
-
-import DeleteModal from "Common/DeleteModal";
+import {
+  Search,
+  Trash2,
+  Plus,
+  MoreHorizontal,
+  FileEdit,
+  CheckCircle,
+  Loader,
+  X,
+  Download,
+  SlidersHorizontal,
+  // ImagePlus,
+} from "lucide-react";
 import Modal from "Common/Components/Modal";
+import DeleteModal from "Common/DeleteModal";
+
+// Images
+// import dummyImg from "assets/images/users/user-dummy-img.jpg";
 
 // react-redux
 import { useDispatch, useSelector } from "react-redux";
@@ -23,61 +36,47 @@ import * as Yup from "yup";
 import { useFormik } from "formik";
 
 import {
-  getEmployee as onGetEmployee,
-  addEmployee as onAddEmployee,
-  updateEmployee as onUpdateEmployee,
-  deleteEmployee as onDeleteEmployee,
+  getUserList as onGetUserList,
+  addUserList as onAddUserList,
+  updateUserList as onUpdateUserList,
+  deleteUserList as onDeleteUserList,
 } from "slices/thunk";
 import { ToastContainer } from "react-toastify";
+import filterDataBySearch from "Common/filterDataBySearch";
 
-const UserManagment = () => {
+const USER_STATUS = {
+  active: "active",
+  inactive: "inactive",
+};
+
+const UserManagement = () => {
   const dispatch = useDispatch<any>();
 
   const selectDataList = createSelector(
-    (state: any) => {
-      return state.UserManagement;
-    },
-    (state) => {
-      return { dataList: state.employeelist };
-    },
+    (state: any) => state.Users,
+    (user) => ({
+      userList: user.userList || [],
+      pagination: user.pagination || {},
+    }),
   );
 
-  const { dataList } = useSelector(selectDataList);
+  const { userList } = useSelector(selectDataList);
 
-  const [data, setData] = useState<any>([]);
+  const [user, setUser] = useState<any>([]);
   const [eventData, setEventData] = useState<any>();
 
   const [show, setShow] = useState<boolean>(false);
   const [isEdit, setIsEdit] = useState<boolean>(false);
 
-  // Image
-  const [selectedImage, setSelectedImage] = useState<any>();
-
-  const handleImageChange = (event: any) => {
-    const fileInput = event.target;
-    if (fileInput.files && fileInput.files.length > 0) {
-      const file = fileInput.files[0];
-      const reader = new FileReader();
-      reader.onload = (e: any) => {
-        validation.setFieldValue("img", e.target.result);
-        setSelectedImage(e.target.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   // Get Data
   useEffect(() => {
-    dispatch(onGetEmployee());
+    dispatch(onGetUserList());
   }, [dispatch]);
 
   useEffect(() => {
-    console.log({ dataList });
-
-    if (!dataList.length) return;
-
-    setData(dataList);
-  }, [dataList, dataList.length]);
+    if (!userList.length) return;
+    setUser(userList);
+  }, [userList]);
 
   // Delete Modal
   const [deleteModal, setDeleteModal] = useState<boolean>(false);
@@ -86,6 +85,7 @@ const UserManagment = () => {
   // Delete Data
   const onClickDelete = (cell: any) => {
     setDeleteModal(true);
+
     if (cell.id) {
       setEventData(cell);
     }
@@ -93,7 +93,7 @@ const UserManagment = () => {
 
   const handleDelete = () => {
     if (eventData) {
-      dispatch(onDeleteEmployee(eventData.id));
+      dispatch(onDeleteUserList(eventData.id));
       setDeleteModal(false);
     }
   };
@@ -111,50 +111,61 @@ const UserManagment = () => {
     enableReinitialize: true,
 
     initialValues: {
-      employeeId: (eventData && eventData.employeeId) || "",
-      name: (eventData && eventData.name) || "",
-      img: (eventData && eventData.img) || "",
-      designation: (eventData && eventData.designation) || "",
-      email: (eventData && eventData.email) || "",
+      // img: (eventData && eventData.img) || '',
+      fullname: (eventData && eventData.fullname) || "",
       phone: (eventData && eventData.phone) || "",
-      location: (eventData && eventData.location) || "",
-      experience: (eventData && eventData.experience) || "",
-      joinDate: (eventData && eventData.joinDate) || "",
+      username: (eventData && eventData.username) || "",
+      password: (eventData && eventData.password) || "",
+      storeCode: (eventData && eventData.storeCode) || "",
+      status: (eventData && eventData.status) || USER_STATUS.active,
+      role: (eventData && eventData.role) || "",
     },
     validationSchema: Yup.object({
-      name: Yup.string().required("Please Enter Name"),
-      img: Yup.string().required("Please Add Image"),
-      designation: Yup.string().required("Please Enter Designation"),
-      email: Yup.string().required("Please Enter Email"),
-      phone: Yup.string().required("Please Enter Phone"),
-      location: Yup.string().required("Please Enter Location"),
-      experience: Yup.string().required("Please Enter Experience"),
-      joinDate: Yup.string().required("Please Enter Date"),
+      // img: Yup.string().required("Please Add Image"),
+      fullname: Yup.string().required("Vui lòng nhập họ và tên"),
+      phone: Yup.string().required("Vui lòng nhập số điện thoại"),
+      username: Yup.string().required("Vui lòng nhập tên đăng nhập"),
+      password: Yup.string().required("Vui lòng nhập mật khẩu"),
+      storeCode: Yup.string().required("Vui lòng chọn chi nhánh"),
+      status: Yup.string().required("Vui lòng chọn trạng thái"),
+      role: Yup.string().required("Vui lòng chọn chức vụ"),
     }),
 
     onSubmit: (values) => {
       if (isEdit) {
-        const updateData = {
+        const updateUser = {
           id: eventData ? eventData.id : 0,
           ...values,
         };
         // update user
-        dispatch(onUpdateEmployee(updateData));
+        dispatch(onUpdateUserList(updateUser));
       } else {
-        const newData = {
+        const newUser = {
           ...values,
-          id: (Math.floor(Math.random() * (30 - 20)) + 20).toString(),
-          employeeId:
-            "#TWE1001" +
-            (Math.floor(Math.random() * (30 - 20)) + 20).toString(),
-          experience: values.experience + " year",
+          // id: (Math.floor(Math.random() * (30 - 20)) + 20).toString(),
+          // code: "#TW15000" + (Math.floor(Math.random() * (30 - 20)) + 20).toString(),
         };
         // save new user
-        dispatch(onAddEmployee(newData));
+        dispatch(onAddUserList(newUser));
       }
       toggle();
     },
   });
+
+  // Image
+  const [, setSelectedImage] = useState<any>();
+  // const handleImageChange = (event: any) => {
+  //     const fileInput = event.target;
+  //     if (fileInput.files && fileInput.files.length > 0) {
+  //         const file = fileInput.files[0];
+  //         const reader = new FileReader();
+  //         reader.onload = (e: any) => {
+  //             validation.setFieldValue('img', e.target.result);
+  //             setSelectedImage(e.target.result);
+  //         };
+  //         reader.readAsDataURL(file);
+  //     }
+  // };
 
   const toggle = useCallback(() => {
     if (show) {
@@ -170,421 +181,531 @@ const UserManagment = () => {
     }
   }, [show, validation]);
 
+  // Search Data
+  const filterSearchData = (e: any) => {
+    const search = e.target.value;
+    const keysToSearch = ["username", "fullname", "phone", "status"];
+    filterDataBySearch(userList, search, keysToSearch, setUser);
+  };
+
   // columns
+  const Status = ({ item }: any) => {
+    switch (item) {
+      case USER_STATUS.active:
+        return (
+          <span className="px-2.5 py-0.5 text-xs font-medium rounded border bg-green-100 border-transparent text-green-500 dark:bg-green-500/20 dark:border-transparent inline-flex items-center status">
+            <CheckCircle className="size-3 mr-1.5" />
+            {item}
+          </span>
+        );
+      case USER_STATUS.inactive:
+        return (
+          <span className="px-2.5 py-0.5 inline-flex items-center text-xs font-medium rounded border bg-slate-100 border-transparent text-slate-500 dark:bg-slate-500/20 dark:text-zink-200 dark:border-transparent status">
+            <Loader className="size-3 mr-1.5" />
+            {item}
+          </span>
+        );
+      default:
+        return (
+          <span className="px-2.5 py-0.5 inline-flex items-center text-xs font-medium rounded border bg-red-100 border-transparent text-red-500 dark:bg-red-500/20 dark:border-transparent status">
+            <X className="size-3 mr-1.5" />
+            {item}
+          </span>
+        );
+    }
+  };
+
   const columns = useMemo(
     () => [
       {
-        header: "Employee ID",
-        accessorKey: "employeeId",
+        header: (
+          <div className="flex items-center h-full">
+            <input
+              id="CheckboxAll"
+              className="size-4 bg-white border border-slate-200 checked:bg-none dark:bg-zink-700 dark:border-zink-500 rounded-sm appearance-none arrow-none relative after:absolute after:content-['\eb7b'] after:top-0 after:left-0 after:font-remix after:leading-none after:opacity-0 checked:after:opacity-100 after:text-custom-500 checked:border-custom-500 dark:after:text-custom-500 dark:checked:border-custom-800 cursor-pointer"
+              type="checkbox"
+            />
+          </div>
+        ),
+        enableSorting: false,
+        id: "checkAll",
+        cell: (cell: any) => {
+          return (
+            <div className="flex items-center h-full">
+              <input
+                id="Checkbox1"
+                className="size-4 bg-white border border-slate-200 checked:bg-none dark:bg-zink-700 dark:border-zink-500 rounded-sm appearance-none arrow-none relative after:absolute after:content-['\eb7b'] after:top-0 after:left-0 after:font-remix after:leading-none after:opacity-0 checked:after:opacity-100 after:text-custom-500 checked:border-custom-500 dark:after:text-custom-500 dark:checked:border-custom-800 cursor-pointer"
+                type="checkbox"
+              />
+            </div>
+          );
+        },
+      },
+      {
+        header: "ID",
+        accessorKey: "id",
         enableColumnFilter: false,
         cell: (cell: any) => (
           <Link
             to="#!"
-            className="transition-all duration-150 ease-linear text-custom-500 hover:text-custom-600"
+            className="transition-all duration-150 ease-linear text-custom-500 hover:text-custom-600 user-id"
           >
             {cell.getValue()}
           </Link>
         ),
       },
       {
-        header: "Name",
-        accessorKey: "name",
+        header: "Tên đăng nhập",
+        accessorKey: "username",
         enableColumnFilter: false,
         cell: (cell: any) => (
-          <Link to="#!" className="flex items-center gap-3">
-            <div className="size-6 rounded-full shrink-0 bg-slate-100">
-              <img
-                src={cell.row.original.img}
-                alt=""
-                className="h-6 rounded-full"
-              />
+          <div className="flex items-center gap-2">
+            {/* <div className="flex items-center justify-center size-10 font-medium rounded-full shrink-0 bg-slate-200 text-slate-800 dark:text-zink-50 dark:bg-zink-600"> */}
+            {/*   {cell.row.original.img ? ( */}
+            {/*     <img */}
+            {/*       src={cell.row.original.img} */}
+            {/*       alt="" */}
+            {/*       className="h-10 rounded-full" */}
+            {/*     /> */}
+            {/*   ) : ( */}
+            {/*     cell */}
+            {/*       .getValue() */}
+            {/*       .split(" ") */}
+            {/*       .map((word: any) => word.charAt(0)) */}
+            {/*       .join("") */}
+            {/*   )} */}
+            {/* </div> */}
+            <div className="grow">
+              <h6 className="mb-1">
+                <Link to="#!" className="name">
+                  {cell.getValue()}
+                </Link>
+              </h6>
+              {/* <p className="text-slate-500 dark:text-zink-200"> */}
+              {/*   {cell.row.original.designation} */}
+              {/* </p> */}
             </div>
-            <h6 className="grow">{cell.getValue()}</h6>
-          </Link>
+          </div>
         ),
       },
       {
-        header: "Designation",
-        accessorKey: "designation",
+        header: "Họ và tên",
+        accessorKey: "fullname",
         enableColumnFilter: false,
       },
       {
-        header: "Email Id",
-        accessorKey: "email",
-        enableColumnFilter: false,
-      },
-      {
-        header: "Phone Number",
+        header: "Số điện thoại",
         accessorKey: "phone",
         enableColumnFilter: false,
       },
       {
-        header: "Location",
-        accessorKey: "location",
+        header: "Chi nhánh",
+        accessorKey: "storeCode",
         enableColumnFilter: false,
       },
       {
-        header: "Experience",
-        accessorKey: "experience",
+        header: "Trạng thái",
+        accessorKey: "status",
         enableColumnFilter: false,
-      },
-      {
-        header: "Joining Date",
-        accessorKey: "joinDate",
-        enableColumnFilter: false,
+        enableSorting: true,
+        cell: (cell: any) => <Status item={cell.getValue()} />,
       },
       {
         header: "Action",
         enableColumnFilter: false,
         enableSorting: true,
         cell: (cell: any) => (
-          <div className="flex gap-3">
-            <Link
-              className="flex items-center justify-center size-8 transition-all duration-200 ease-linear rounded-md bg-slate-100 text-slate-500 hover:text-custom-500 hover:bg-custom-100 dark:bg-zink-600 dark:text-zink-200 dark:hover:bg-custom-500/20 dark:hover:text-custom-500"
-              to="/pages-account"
+          <Dropdown className="relative">
+            <Dropdown.Trigger
+              className="flex items-center justify-center size-[30px] p-0 text-slate-500 btn bg-slate-100 hover:text-white hover:bg-slate-600 focus:text-white focus:bg-slate-600 focus:ring focus:ring-slate-100 active:text-white active:bg-slate-600 active:ring active:ring-slate-100 dark:bg-slate-500/20 dark:text-slate-400 dark:hover:bg-slate-500 dark:hover:text-white dark:focus:bg-slate-500 dark:focus:text-white dark:active:bg-slate-500 dark:active:text-white dark:ring-slate-400/20"
+              id="usersAction1"
             >
-              <Eye className="inline-block size-3" />{" "}
-            </Link>
-            <Link
-              to="#!"
-              data-modal-target="addEmployeeModal"
-              className="flex items-center justify-center size-8 transition-all duration-200 ease-linear rounded-md edit-item-btn bg-slate-100 text-slate-500 hover:text-custom-500 hover:bg-custom-100 dark:bg-zink-600 dark:text-zink-200 dark:hover:bg-custom-500/20 dark:hover:text-custom-500"
-              onClick={() => {
-                const data = cell.row.original;
-                handleUpdateDataClick(data);
-              }}
+              <MoreHorizontal className="size-3" />
+            </Dropdown.Trigger>
+            <Dropdown.Content
+              placement="right-end"
+              className="absolute z-50 py-2 mt-1 ltr:text-left rtl:text-right list-none bg-white rounded-md shadow-md min-w-[10rem] dark:bg-zink-600"
+              aria-labelledby="usersAction1"
             >
-              <Pencil className="size-4" />
-            </Link>
-            <Link
-              to="#!"
-              className="flex items-center justify-center size-8 transition-all duration-200 ease-linear rounded-md remove-item-btn bg-slate-100 text-slate-500 hover:text-custom-500 hover:bg-custom-100 dark:bg-zink-600 dark:text-zink-200 dark:hover:bg-custom-500/20 dark:hover:text-custom-500"
-              onClick={() => {
-                const data = cell.row.original;
-                onClickDelete(data);
-              }}
-            >
-              <Trash2 className="size-4" />
-            </Link>
-          </div>
+              {/* <li> */}
+              {/*   <Link */}
+              {/*     className="block px-4 py-1.5 text-base transition-all duration-200 ease-linear text-slate-600 hover:bg-slate-100 hover:text-slate-500 focus:bg-slate-100 focus:text-slate-500 dark:text-zink-100 dark:hover:bg-zink-500 dark:hover:text-zink-200 dark:focus:bg-zink-500 dark:focus:text-zink-200" */}
+              {/*     to="/pages-account" */}
+              {/*   > */}
+              {/*     <Eye className="inline-block size-3 ltr:mr-1 rtl:ml-1" />{" "} */}
+              {/*     <span className="align-middle">Overview</span> */}
+              {/*   </Link> */}
+              {/* </li> */}
+              <li>
+                <Link
+                  data-modal-target="addUserModal"
+                  className="block px-4 py-1.5 text-base transition-all duration-200 ease-linear text-slate-600 hover:bg-slate-100 hover:text-slate-500 focus:bg-slate-100 focus:text-slate-500 dark:text-zink-100 dark:hover:bg-zink-500 dark:hover:text-zink-200 dark:focus:bg-zink-500 dark:focus:text-zink-200"
+                  to="#!"
+                  onClick={() => {
+                    const data = cell.row.original;
+                    handleUpdateDataClick(data);
+                  }}
+                >
+                  <FileEdit className="inline-block size-3 ltr:mr-1 rtl:ml-1" />{" "}
+                  <span className="align-middle">Cập nhật</span>
+                </Link>
+              </li>
+              <li>
+                <Link
+                  className="block px-4 py-1.5 text-base transition-all duration-200 ease-linear text-slate-600 hover:bg-slate-100 hover:text-slate-500 focus:bg-slate-100 focus:text-slate-500 dark:text-zink-100 dark:hover:bg-zink-500 dark:hover:text-zink-200 dark:focus:bg-zink-500 dark:focus:text-zink-200"
+                  to="#!"
+                  onClick={() => {
+                    const orderData = cell.row.original;
+                    onClickDelete(orderData);
+                  }}
+                >
+                  <Trash2 className="inline-block size-3 ltr:mr-1 rtl:ml-1" />{" "}
+                  <span className="align-middle">Xóa</span>
+                </Link>
+              </li>
+            </Dropdown.Content>
+          </Dropdown>
         ),
       },
     ],
     [],
   );
 
+  const options = [
+    { value: "status", label: "Trạng thái" },
+    { value: USER_STATUS.active, label: "Hoạt động" },
+    { value: USER_STATUS.inactive, label: "Không hoạt động" },
+  ];
+
+  const handleChange = (selectedOption: any) => {
+    if (selectedOption.value === "status") {
+      setUser(userList);
+    } else {
+      const filteredUsers = userList.filter(
+        (data: any) => data.status === selectedOption.value,
+      );
+      setUser(filteredUsers);
+    }
+  };
+
   return (
     <React.Fragment>
-      <BreadCrumb title="Employee List" pageTitle="HR Management" />
+      <BreadCrumb title="Quản lý người dùng" pageTitle="Users" />
       <DeleteModal
         show={deleteModal}
         onHide={deleteToggle}
         onDelete={handleDelete}
       />
       <ToastContainer closeButton={false} limit={1} />
-      <div className="card" id="employeeTable">
-        <div className="card-body">
-          <div className="flex items-center gap-3 mb-4">
-            <h6 className="text-15 grow">
-              Employee (<b className="total-Employs">{data.length}</b>)
-            </h6>
-            <div className="shrink-0">
-              <Link
-                to="#!"
-                data-modal-target="addEmployeeModal"
-                type="button"
-                className="text-white btn bg-custom-500 border-custom-500 hover:text-white hover:bg-custom-600 hover:border-custom-600 focus:text-white focus:bg-custom-600 focus:border-custom-600 focus:ring focus:ring-custom-100 active:text-white active:bg-custom-600 active:border-custom-600 active:ring active:ring-custom-100 dark:ring-custom-400/20 add-employee"
-                onClick={toggle}
-              >
-                <Plus className="inline-block size-4" />{" "}
-                <span className="align-middle">Add Employee</span>
-              </Link>
-            </div>
-          </div>
-          {data && data.length > 0 ? (
-            <TableContainer
-              isPagination={true}
-              columns={columns || []}
-              data={data || []}
-              customPageSize={7}
-              divclassName="-mx-5 overflow-x-auto"
-              tableclassName="w-full whitespace-nowrap"
-              theadclassName="ltr:text-left rtl:text-right bg-slate-100 dark:bg-zink-600"
-              thclassName="px-3.5 py-2.5 first:pl-5 last:pr-5 font-semibold border-b border-slate-200 dark:border-zink-500"
-              tdclassName="px-3.5 py-2.5 first:pl-5 last:pr-5 border-y border-slate-200 dark:border-zink-500"
-              PaginationClassName="flex flex-col items-center gap-4 px-4 mt-4 md:flex-row"
-            />
-          ) : (
-            <div className="noresult">
-              <div className="py-6 text-center">
-                <Search className="size-6 mx-auto text-sky-500 fill-sky-100 dark:sky-500/20" />
-                <h5 className="mt-2 mb-1">Sorry! No Result Found</h5>
-                <p className="mb-0 text-slate-500 dark:text-zink-200">
-                  We've searched more than 299+ Employee We did not find any
-                  Employee for you search.
-                </p>
+      <div className="grid grid-cols-1 gap-x-5 xl:grid-cols-12">
+        <div className="xl:col-span-12">
+          <div className="card" id="usersTable">
+            <div className="card-body">
+              <div className="flex items-center">
+                <h6 className="text-15 grow">Danh sách người dùng</h6>
+                <div className="shrink-0">
+                  <button
+                    type="button"
+                    className="text-white btn bg-custom-500 border-custom-500 hover:text-white hover:bg-custom-600 hover:border-custom-600 focus:text-white focus:bg-custom-600 focus:border-custom-600 focus:ring focus:ring-custom-100 active:text-white active:bg-custom-600 active:border-custom-600 active:ring active:ring-custom-100 dark:ring-custom-400/20"
+                    onClick={toggle}
+                  >
+                    <Plus className="inline-block size-4" />{" "}
+                    <span className="align-middle">Tạo mới</span>
+                  </button>
+                </div>
               </div>
             </div>
-          )}
+            <div className="!py-3.5 card-body border-y border-dashed border-slate-200 dark:border-zink-500">
+              <form action="#!">
+                <div className="grid grid-cols-1 gap-5 xl:grid-cols-12">
+                  <div className="relative xl:col-span-2">
+                    <input
+                      type="text"
+                      className="ltr:pl-8 rtl:pr-8 search form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
+                      placeholder="Search for name, email, phone number etc..."
+                      autoComplete="off"
+                      onChange={(e) => filterSearchData(e)}
+                    />
+                    <Search className="inline-block size-4 absolute ltr:left-2.5 rtl:right-2.5 top-2.5 text-slate-500 dark:text-zink-200 fill-slate-100 dark:fill-zink-600" />
+                  </div>
+                  <div className="xl:col-span-2">
+                    <Select
+                      className="border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
+                      options={options}
+                      isSearchable={false}
+                      defaultValue={options[0]}
+                      onChange={(event: any) => handleChange(event)}
+                      id="choices-single-default"
+                    />
+                  </div>
+                  <div className="xl:col-span-3 xl:col-start-10">
+                    <div className="flex gap-2 xl:justify-end">
+                      <div>
+                        <button
+                          type="button"
+                          className="bg-white border-dashed text-custom-500 btn border-custom-500 hover:text-custom-500 hover:bg-custom-50 hover:border-custom-600 focus:text-custom-600 focus:bg-custom-50 focus:border-custom-600 active:text-custom-600 active:bg-custom-50 active:border-custom-600 dark:bg-zink-700 dark:ring-custom-400/20 dark:hover:bg-custom-800/20 dark:focus:bg-custom-800/20 dark:active:bg-custom-800/20"
+                        >
+                          <Download className="inline-block size-4" />{" "}
+                          <span className="align-middle">Import</span>
+                        </button>
+                      </div>
+                      <button className="flex items-center justify-center size-[37.5px] p-0 text-slate-500 btn bg-slate-100 hover:text-white hover:bg-slate-600 focus:text-white focus:bg-slate-600 focus:ring focus:ring-slate-100 active:text-white active:bg-slate-600 active:ring active:ring-slate-100 dark:bg-slate-500/20 dark:text-slate-400 dark:hover:bg-slate-500 dark:hover:text-white dark:focus:bg-slate-500 dark:focus:text-white dark:active:bg-slate-500 dark:active:text-white dark:ring-slate-400/20">
+                        <SlidersHorizontal className="size-4" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </form>
+            </div>
+            <div className="card-body">
+              {user && user.length > 0 ? (
+                <TableContainer
+                  isPagination={true}
+                  columns={columns || []}
+                  data={user || []}
+                  customPageSize={10}
+                  divclassName="-mx-5 -mb-5 overflow-x-auto"
+                  tableclassName="w-full border-separate table-custom border-spacing-y-1 whitespace-nowrap"
+                  theadclassName="text-left relative rounded-md bg-slate-100 dark:bg-zink-600 after:absolute ltr:after:border-l-2 rtl:after:border-r-2 ltr:after:left-0 rtl:after:right-0 after:top-0 after:bottom-0 after:border-transparent [&.active]:after:border-custom-500 [&.active]:bg-slate-100 dark:[&.active]:bg-zink-600"
+                  thclassName="px-3.5 py-2.5 first:pl-5 last:pr-5 font-semibold"
+                  tdclassName="px-3.5 py-2.5 first:pl-5 last:pr-5"
+                  PaginationClassName="flex flex-col items-center mt-8 md:flex-row"
+                />
+              ) : (
+                <div className="noresult">
+                  <div className="py-6 text-center">
+                    <Search className="size-6 mx-auto text-sky-500 fill-sky-100 dark:sky-500/20" />
+                    <h5 className="mt-2 mb-1">Sorry! No Result Found</h5>
+                    <p className="mb-0 text-slate-500 dark:text-zink-200">
+                      We did not find any users for you search.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Employee Modal */}
+      {/* User Modal  */}
       <Modal
         show={show}
         onHide={toggle}
-        id="userModal"
+        id="defaultModal"
         modal-center="true"
         className="fixed flex flex-col transition-all duration-300 ease-in-out left-2/4 z-drawer -translate-x-2/4 -translate-y-2/4"
         dialogClassName="w-screen md:w-[30rem] bg-white shadow rounded-md dark:bg-zink-600"
       >
         <Modal.Header
-          className="flex items-center justify-between p-4 border-b dark:border-zink-500"
+          className="flex items-center justify-between p-4 border-b dark:border-zink-300/20"
           closeButtonClass="transition-all duration-200 ease-linear text-slate-400 hover:text-red-500"
         >
           <Modal.Title className="text-16">
-            {!!isEdit ? "Edit Employee" : "Add Employee"}
+            {!!isEdit ? "Cập nhật" : "Thêm mới"}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body className="max-h-[calc(theme('height.screen')_-_180px)] p-4 overflow-y-auto">
           <form
-            className="create-form"
-            id="create-form"
+            action="#!"
             onSubmit={(e) => {
               e.preventDefault();
               validation.handleSubmit();
               return false;
             }}
           >
-            <input type="hidden" value="" name="id" id="id" />
-            <input type="hidden" value="add" name="action" id="action" />
-            <input type="hidden" id="id-field" />
-            <div
-              id="alert-error-msg"
-              className="hidden px-4 py-3 text-sm text-red-500 border border-transparent rounded-md bg-red-50 dark:bg-red-500/20"
-            ></div>
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-              <div className="xl:col-span-12">
-                <div className="relative size-24 mx-auto mb-4 rounded-full shadow-md bg-slate-100 profile-user dark:bg-zink-500">
-                  <img
-                    src={selectedImage || validation.values.img || dummyImg}
-                    alt=""
-                    className="object-cover w-full h-full rounded-full user-profile-image"
-                  />
-                  <div className="absolute bottom-0 flex items-center justify-center size-8 rounded-full ltr:right-0 rtl:left-0 profile-photo-edit">
-                    <input
-                      id="profile-img-file-input"
-                      name="profile-img-file-input"
-                      type="file"
-                      accept="image/*"
-                      className="hidden profile-img-file-input"
-                      onChange={handleImageChange}
-                    />
-                    <label
-                      htmlFor="profile-img-file-input"
-                      className="flex items-center justify-center size-8 bg-white rounded-full shadow-lg cursor-pointer dark:bg-zink-600 profile-photo-edit"
-                    >
-                      <ImagePlus className="size-4 text-slate-500 fill-slate-200 dark:text-zink-200 dark:fill-zink-500" />
-                    </label>
-                  </div>
-                </div>
-                {validation.touched.img && validation.errors.img ? (
-                  <p className="text-red-400">{validation.errors.img}</p>
-                ) : null}
-              </div>
-              <div className="xl:col-span-12">
-                <label
-                  htmlFor="employeeId"
-                  className="inline-block mb-2 text-base font-medium"
-                >
-                  Employee ID
-                </label>
-                <input
-                  type="text"
-                  id="employeeId"
-                  className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
-                  value={validation.values.employeeId || "#TWE1001557"}
-                  disabled
-                />
-              </div>
-              <div className="xl:col-span-12">
-                <label
-                  htmlFor="employeeInput"
-                  className="inline-block mb-2 text-base font-medium"
-                >
-                  Name
-                </label>
-                <input
-                  type="text"
-                  id="employeeInput"
-                  className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
-                  placeholder="Employee name"
-                  name="name"
-                  onChange={validation.handleChange}
-                  value={validation.values.name || ""}
-                />
-                {validation.touched.name && validation.errors.name ? (
-                  <p className="text-red-400">{validation.errors.name}</p>
-                ) : null}
-              </div>
-              <div className="xl:col-span-12">
-                <label
-                  htmlFor="emailInput"
-                  className="inline-block mb-2 text-base font-medium"
-                >
-                  Email
-                </label>
-                <input
-                  type="text"
-                  id="emailInput"
-                  className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
-                  placeholder="example@tailwick.com"
-                  name="email"
-                  onChange={validation.handleChange}
-                  value={validation.values.email || ""}
-                />
-                {validation.touched.email && validation.errors.email ? (
-                  <p className="text-red-400">{validation.errors.email}</p>
-                ) : null}
-              </div>
-              <div className="xl:col-span-6">
-                <label
-                  htmlFor="phoneNumberInput"
-                  className="inline-block mb-2 text-base font-medium"
-                >
-                  Phone Number
-                </label>
-                <input
-                  type="text"
-                  id="phoneNumberInput"
-                  className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
-                  placeholder="Enter phone number"
-                  name="phone"
-                  onChange={validation.handleChange}
-                  value={validation.values.phone || ""}
-                />
-                {validation.touched.phone && validation.errors.phone ? (
-                  <p className="text-red-400">{validation.errors.phone}</p>
-                ) : null}
-              </div>
-              <div className="xl:col-span-6">
-                <label
-                  htmlFor="locationInput"
-                  className="inline-block mb-2 text-base font-medium"
-                >
-                  Location
-                </label>
-                <input
-                  type="text"
-                  id="locationInput"
-                  className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
-                  placeholder="Enter location"
-                  name="location"
-                  onChange={validation.handleChange}
-                  value={validation.values.location || ""}
-                />
-                {validation.touched.location && validation.errors.location ? (
-                  <p className="text-red-400">{validation.errors.location}</p>
-                ) : null}
-              </div>
-              <div className="xl:col-span-6">
-                <label
-                  htmlFor="joiningDateInput"
-                  className="inline-block mb-2 text-base font-medium"
-                >
-                  Joining Date
-                </label>
-                <Flatpickr
-                  id="joiningDateInput"
-                  className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
-                  options={{
-                    dateFormat: "d M, Y",
-                  }}
-                  placeholder="Select date"
-                  name="joinDate"
-                  onChange={(date: any) =>
-                    validation.setFieldValue(
-                      "joinDate",
-                      moment(date[0]).format("DD MMMM ,YYYY"),
-                    )
-                  }
-                  value={validation.values.joinDate || ""}
-                />
-                {validation.touched.joinDate && validation.errors.joinDate ? (
-                  <p className="text-red-400">{validation.errors.joinDate}</p>
-                ) : null}
-              </div>
-              <div className="xl:col-span-6">
-                <label
-                  htmlFor="experienceInput"
-                  className="inline-block mb-2 text-base font-medium"
-                >
-                  Experience
-                </label>
-                <input
-                  type="number"
-                  id="experienceInput"
-                  className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
-                  placeholder="0.0"
-                  name="experience"
-                  onChange={validation.handleChange}
-                  value={validation.values.experience || ""}
-                />
-                {validation.touched.experience &&
-                validation.errors.experience ? (
-                  <p className="text-red-400">{validation.errors.experience}</p>
-                ) : null}
-              </div>
-              <div className="xl:col-span-12">
-                <label
-                  htmlFor="designationSelect"
-                  className="inline-block mb-2 text-base font-medium"
-                >
-                  Designation
-                </label>
-                <select
-                  className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
-                  data-choices
-                  data-choices-search-false
-                  id="typeSelect"
-                  name="designation"
-                  onChange={validation.handleChange}
-                  value={validation.values.designation || ""}
-                >
-                  <option value="Angular Developer">Angular Developer</option>
-                  <option value="React Developer">React Developer</option>
-                  <option value="Project Manager">Project Manager</option>
-                  <option value="Web Designer">Web Designer</option>
-                  <option value="Team Leader">Team Leader</option>
-                  <option value="VueJs Developer">VueJs Developer</option>
-                  <option value="NodeJS Developer">NodeJS Developer</option>
-                  <option value="ASP.Net Developer">ASP.Net Developer</option>
-                  <option value="UI / UX Designer">UI / UX Designer</option>
-                </select>
-                {validation.touched.designation &&
-                validation.errors.designation ? (
-                  <p className="text-red-400">
-                    {validation.errors.designation}
-                  </p>
-                ) : null}
-              </div>
+            {/* <div className="mb-3">
+                            <div className="relative size-24 mx-auto mb-4 rounded-full shadow-md bg-slate-100 profile-user dark:bg-zink-500">
+                                <img src={selectedImage || validation.values.img || dummyImg} alt="" className="object-cover w-full h-full rounded-full user-profile-image" />
+                                <div className="absolute bottom-0 flex items-center justify-center size-8 rounded-full ltr:right-0 rtl:left-0 profile-photo-edit">
+                                    <input
+                                        id="profile-img-file-input"
+                                        name="profile-img-file-input"
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden profile-img-file-input"
+                                        onChange={handleImageChange} />
+                                    <label htmlFor="profile-img-file-input" className="flex items-center justify-center size-8 bg-white rounded-full shadow-lg cursor-pointer dark:bg-zink-600 profile-photo-edit">
+                                        <ImagePlus className="size-4 text-slate-500 fill-slate-200 dark:text-zink-200 dark:fill-zink-500" />
+                                    </label>
+                                </div>
+                            </div>
+                            {validation.touched.img && validation.errors.img ? (
+                                <p className="text-red-400">{validation.errors.img}</p>
+                            ) : null}
+                        </div> */}
+
+            {/* <div className="mb-3">
+                            <label htmlFor="userId" className="inline-block mb-2 text-base font-medium">ID</label>
+                            <input type="text" id="userId" className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200" disabled
+                                value={validation.values.userId || '#TW1500004'}
+                            />
+                        </div> */}
+            <div className="mb-3">
+              <label
+                htmlFor="fullnameInput"
+                className="inline-block mb-2 text-base font-medium"
+              >
+                Họ và tên
+              </label>
+              <input
+                type="text"
+                id="fullnameInput"
+                className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
+                placeholder="Nhập họ và tên"
+                name="fullname"
+                onChange={validation.handleChange}
+                value={validation.values.fullname || ""}
+              />
+              {validation.touched.fullname && validation.errors.fullname ? (
+                <p className="text-red-400">{validation.errors.fullname}</p>
+              ) : null}
+            </div>
+            <div className="mb-3">
+              <label
+                htmlFor="phoneInput"
+                className="inline-block mb-2 text-base font-medium"
+              >
+                Số điện thoại
+              </label>
+              <input
+                type="text"
+                id="phoneInput"
+                className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
+                placeholder="Nhập số điện thoại"
+                name="phone"
+                onChange={validation.handleChange}
+                value={validation.values.phone || ""}
+              />
+              {validation.touched.phone && validation.errors.phone ? (
+                <p className="text-red-400">{validation.errors.phone}</p>
+              ) : null}
+            </div>
+            <div className="mb-3">
+              <label
+                htmlFor="storeCodeSelect"
+                className="inline-block mb-2 text-base font-medium"
+              >
+                Chi nhánh
+              </label>
+              <select
+                className="form-input border-slate-300 focus:outline-none focus:border-custom-500"
+                data-choices
+                data-choices-search-false
+                id="storeCodeSelect"
+                name="storeCode"
+                onChange={validation.handleChange}
+                value={validation.values.storeCode || ""}
+              >
+                <option value="">Chọn chi nhánh</option>
+                <option value="KS1">KS1</option>
+                <option value="KS2">KS2</option>
+                <option value="KH">KH</option>
+              </select>
+              {validation.touched.storeCode && validation.errors.storeCode ? (
+                <p className="text-red-400">{validation.errors.storeCode}</p>
+              ) : null}
+            </div>
+            <div className="mb-3">
+              <label
+                htmlFor="usernameInput"
+                className="inline-block mb-2 text-base font-medium"
+              >
+                Tên đăng nhập
+              </label>
+              <input
+                type="text"
+                id="usernameInput"
+                className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
+                placeholder="Nhập tên đăng nhập"
+                name="username"
+                onChange={validation.handleChange}
+                value={validation.values.username || ""}
+              />
+              {validation.touched.username && validation.errors.username ? (
+                <p className="text-red-400">{validation.errors.username}</p>
+              ) : null}
+            </div>
+            <div className="mb-3">
+              <label
+                htmlFor="passwordInput"
+                className="inline-block mb-2 text-base font-medium"
+              >
+                Mật khẩu
+              </label>
+              <input
+                type="password"
+                id="passwordInput"
+                className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
+                placeholder="***********"
+                name="password"
+                onChange={validation.handleChange}
+                value={validation.values.password || ""}
+              />
+              {validation.touched.password && validation.errors.password ? (
+                <p className="text-red-400">{validation.errors.password}</p>
+              ) : null}
+            </div>
+            <div className="mb-3">
+              <label
+                htmlFor="statusSelect"
+                className="inline-block mb-2 text-base font-medium"
+              >
+                Trạng thái
+              </label>
+              <select
+                className="form-input border-slate-300 focus:outline-none focus:border-custom-500"
+                data-choices
+                data-choices-search-false
+                id="statusSelect"
+                name="status"
+                onChange={validation.handleChange}
+                value={validation.values.status || ""}
+              >
+                <option value="active">Hoạt động</option>
+                <option value="inactive">Không hoạt động</option>
+              </select>
+              {validation.touched.status && validation.errors.status ? (
+                <p className="text-red-400">{validation.errors.status}</p>
+              ) : null}
+            </div>
+            <div className="mb-3">
+              <label
+                htmlFor="roleInput"
+                className="inline-block mb-2 text-base font-medium"
+              >
+                Chức vụ
+              </label>
+              <select
+                className="form-input border-slate-300 focus:outline-none focus:border-custom-500"
+                data-choices
+                data-choices-search-false
+                id="roleInput"
+                name="role"
+                onChange={validation.handleChange}
+                value={validation.values.role || ""}
+              >
+                <option value="">Chức vụ</option>
+                <option value="admin">admin</option>
+                <option value="user">user</option>
+              </select>
+              {validation.touched.role && validation.errors.role ? (
+                <p className="text-red-400">{validation.errors.role}</p>
+              ) : null}
             </div>
             <div className="flex justify-end gap-2 mt-4">
               <button
                 type="reset"
-                id="close-modal"
-                data-modal-close="addEmployeeModal"
-                className="text-red-500 bg-white btn hover:text-red-500 hover:bg-red-100 focus:text-red-500 focus:bg-red-100 active:text-red-500 active:bg-red-100 dark:bg-zink-600 dark:hover:bg-red-500/10 dark:focus:bg-red-500/10 dark:active:bg-red-500/10"
+                data-modal-close="addDocuments"
+                className="text-red-500 transition-all duration-200 ease-linear bg-white border-white btn hover:text-red-600 focus:text-red-600 active:text-red-600 dark:bg-zink-500 dark:border-zink-500"
                 onClick={toggle}
               >
-                Cancel
+                Hủy bỏ
               </button>
               <button
                 type="submit"
-                id="addNew"
-                className="text-white btn bg-custom-500 border-custom-500 hover:text-white hover:bg-custom-600 hover:border-custom-600 focus:text-white focus:bg-custom-600 focus:border-custom-600 focus:ring focus:ring-custom-100 active:text-white active:bg-custom-600 active:border-custom-600 active:ring active:ring-custom-100 dark:ring-custom-400/20"
+                className="text-white transition-all duration-200 ease-linear btn bg-custom-500 border-custom-500 hover:text-white hover:bg-custom-600 hover:border-custom-600 focus:text-white focus:bg-custom-600 focus:border-custom-600 focus:ring focus:ring-custom-100 active:text-white active:bg-custom-600 active:border-custom-600 active:ring active:ring-custom-100 dark:ring-custom-400/20"
               >
-                {!!isEdit ? "Update" : "Add Employee"}
+                {!!isEdit ? "Cập nhật" : "Thêm mới"}
               </button>
             </div>
           </form>
@@ -594,4 +715,4 @@ const UserManagment = () => {
   );
 };
 
-export default UserManagment;
+export default UserManagement;

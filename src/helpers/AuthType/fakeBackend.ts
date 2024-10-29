@@ -19,7 +19,6 @@ import {
   NotesData,
   EventData,
   UserListViewData,
-  GridViewData,
   ListViewData,
   ProductGridViewData,
   LeaveManageHRData,
@@ -31,7 +30,7 @@ import {
   FriendsData,
   ProductReviewsData,
   MailList,
-  InvoiceList
+  InvoiceList,
 } from "Common/data";
 
 let users = [
@@ -49,11 +48,11 @@ const fakeBackend = () => {
   const mock = new MockAdapter(axios, { onNoMatch: "passthrough" });
 
   // login
-  mock.onPost(url.POST_FAKE_LOGIN).reply(config => {
+  mock.onPost(url.POST_FAKE_LOGIN).reply((config) => {
     const user = JSON.parse(config["data"]);
 
     const validUser = users.filter(
-      usr => usr.email === user.email && usr.password === user.password
+      (usr) => usr.email === user.email && usr.password === user.password,
     );
 
     return new Promise((resolve, reject) => {
@@ -83,19 +82,18 @@ const fakeBackend = () => {
   });
 
   // edit profile
-  mock.onPost(url.POST_EDIT_PROFILE).reply(config => {
+  mock.onPost(url.POST_EDIT_PROFILE).reply((config) => {
     const user = JSON.parse(config["data"]);
 
-    const validUser = users.filter(usr => usr.uid === user.idx);
+    const validUser = users.filter((usr) => usr.uid === user.idx);
 
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         if (validUser["length"] === 1) {
-
           let objIndex;
 
           //Find index of specific object using findIndex method.
-          objIndex = users.findIndex(obj => obj.uid === user.idx);
+          objIndex = users.findIndex((obj) => obj.uid === user.idx);
           //Update object's name property.
           users[objIndex].username = user.username;
 
@@ -125,7 +123,7 @@ const fakeBackend = () => {
   mock.onPost("/post-jwt-login").reply((config: any) => {
     const user = JSON.parse(config["data"]);
     const validUser = users.filter(
-      usr => usr.email === user.email && usr.password === user.password
+      (usr) => usr.email === user.email && usr.password === user.password,
     );
 
     return new Promise((resolve, reject) => {
@@ -156,7 +154,7 @@ const fakeBackend = () => {
 
     let finalToken = one?.Authorization;
 
-    const validUser = users.filter(usr => usr.uid === user.idx);
+    const validUser = users.filter((usr) => usr.uid === user.idx);
 
     return new Promise((resolve, reject) => {
       setTimeout(() => {
@@ -166,7 +164,7 @@ const fakeBackend = () => {
             let objIndex;
 
             //Find index of specific object using findIndex method.
-            objIndex = users.findIndex(obj => obj.uid === user.idx);
+            objIndex = users.findIndex((obj) => obj.uid === user.idx);
 
             //Update object's name property.
             users[objIndex].username = user.username;
@@ -221,14 +219,14 @@ const fakeBackend = () => {
   });
 
   // Chat
-  mock.onGet(new RegExp(`${url.GET_CHAT}/*`)).reply(config => {
+  mock.onGet(new RegExp(`${url.GET_CHAT}/*`)).reply((config) => {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         if (ChatUser) {
           // Passing fake JSON data as response
           const { params } = config;
           const filteredMessages = ChatUser.filter(
-            msg => msg.roomId === params.roomId
+            (msg) => msg.roomId === params.roomId,
           );
 
           resolve([200, filteredMessages]);
@@ -343,7 +341,6 @@ const fakeBackend = () => {
       });
     });
   });
-
 
   // Calendar
   mock.onGet(url.GET_EVENT).reply(() => {
@@ -1312,62 +1309,6 @@ const fakeBackend = () => {
       });
     });
   });
-
-  // Grid View
-  mock.onGet(url.GET_USER_GRID).reply(() => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (GridViewData) {
-          // Passing fake JSON data as response
-          resolve([200, GridViewData]);
-        } else {
-          reject([400, "cannot get user data"]);
-        }
-      });
-    });
-  });
-
-  mock.onPost(url.ADD_USER_GRID).reply((event: any) => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (event && event.data) {
-          // Passing fake JSON data as response
-          resolve([200, event.data]);
-        } else {
-          reject([400, "cannot add user"]);
-        }
-      });
-    });
-  });
-
-  mock.onPatch(url.UPDATE_USER_GRID).reply((event: any) => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (event && event.data) {
-          // Passing fake JSON data as response
-          resolve([200, event.data]);
-        } else {
-          reject([400, "cannot update user"]);
-        }
-      });
-    });
-  });
-
-  mock.onDelete(url.DELETE_USER_GRID).reply((config: any) => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (config && config.headers) {
-          // Passing fake JSON data as response
-          resolve([200, config.headers.user]);
-        } else {
-          reject([400, "cannot delete user"]);
-        }
-      });
-    });
-  });
-
 };
-
-
 
 export default fakeBackend;
