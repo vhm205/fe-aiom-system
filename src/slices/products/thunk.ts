@@ -1,13 +1,20 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { request } from "helpers/axios";
-import { IHttpResponse } from "types";
 
-export const getUserList = createAsyncThunk("users/getUserList", async () => {
+import { addProductList as addProductListApi } from "../../helpers/fakebackend_helper";
+import type { IHttpResponse } from "types";
+import { request } from "helpers/axios";
+import { convertObjToQueryString } from "helpers/utils";
+
+const TYPE_PREFIX = "products";
+
+export const getProductList = createAsyncThunk(
+  `${TYPE_PREFIX}/getProductList`,
+  async (event?: any) => {
   try {
-    const response: IHttpResponse = await request.get(`/users`);
+    const query = convertObjToQueryString(event);
+    const response: IHttpResponse = await request.get(`/products?${query}`);
 
     if (
       (response.statusCode && response.statusCode !== 200) ||
@@ -24,40 +31,29 @@ export const getUserList = createAsyncThunk("users/getUserList", async () => {
     toast.error(error.message, { autoClose: 2000 });
     return null;
   }
-});
+  },
+);
 
-export const addUserList = createAsyncThunk(
-  "users/addUserList",
+export const addProductList = createAsyncThunk(
+  `${TYPE_PREFIX}/addProductList`,
   async (event: any) => {
     try {
-      const response: IHttpResponse = await request.post(`/users`, event);
-
-      if (
-        (response.statusCode && response.statusCode !== 201) ||
-        !response.success
-      ) {
-        throw new Error(response.message);
-      }
-
-      toast.success("Thêm user thành công", { autoClose: 2000 });
-      const data = {
-        id: response.data?.id,
-        ...event,
-      };
-
+      const response = addProductListApi(event);
+      const data = await response;
+      toast.success("Data Added Successfully", { autoClose: 2000 });
       return data;
-    } catch (error: any) {
-      toast.error(error.message, { autoClose: 2000 });
-      return null;
+    } catch (error) {
+      toast.error("Data Added Failed", { autoClose: 2000 });
+      return error;
     }
   },
 );
 
-export const updateUserList = createAsyncThunk(
-  "users/updateUserList",
+export const updateProductList = createAsyncThunk(
+  `${TYPE_PREFIX}/updateProductList`,
   async (event: any) => {
     try {
-      const response: IHttpResponse = await request.put(`/users`, event);
+      const response: IHttpResponse = await request.put(`/products/${event.id}`, event);
 
       if (
         (response.statusCode && response.statusCode !== 200) ||
@@ -66,7 +62,7 @@ export const updateUserList = createAsyncThunk(
         throw new Error(response.message);
       }
 
-      toast.success("Cập nhật user thành công", { autoClose: 2000 });
+      toast.success("Cập nhật sản phẩm thành công", { autoClose: 2000 });
       return {
         id: response.data?.id,
         ...event,
@@ -78,11 +74,11 @@ export const updateUserList = createAsyncThunk(
   },
 );
 
-export const deleteUserList = createAsyncThunk(
-  "users/deleteUserList",
+export const deleteProductList = createAsyncThunk(
+  `${TYPE_PREFIX}/deleteProductList`,
   async (event: any) => {
     try {
-      const response: IHttpResponse = await request.delete(`/users/${event}`);
+      const response: IHttpResponse = await request.delete(`/products/${event}`);
 
       if (
         (response.statusCode && response.statusCode !== 204) ||
@@ -91,7 +87,7 @@ export const deleteUserList = createAsyncThunk(
         throw new Error(response.message);
       }
 
-      toast.success("Xóa user thành công", { autoClose: 2000 });
+      toast.success("Xóa sản phẩm thành công", { autoClose: 2000 });
       return event;
     } catch (error: any) {
       toast.error(error.message, { autoClose: 2000 });

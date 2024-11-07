@@ -49,6 +49,12 @@ const USER_STATUS = {
   inactive: "inactive",
 };
 
+const options = [
+  { value: "status", label: "Trạng thái" },
+  { value: USER_STATUS.active, label: "Hoạt động" },
+  { value: USER_STATUS.inactive, label: "Không hoạt động" },
+];
+
 const UserManagement = () => {
   const dispatch = useDispatch<any>();
 
@@ -142,7 +148,6 @@ const UserManagement = () => {
       } else {
         const newUser = {
           ...values,
-          // id: (Math.floor(Math.random() * (30 - 20)) + 20).toString(),
           // code: "#TW15000" + (Math.floor(Math.random() * (30 - 20)) + 20).toString(),
         };
         // save new user
@@ -154,6 +159,7 @@ const UserManagement = () => {
 
   // Image
   const [, setSelectedImage] = useState<any>();
+
   // const handleImageChange = (event: any) => {
   //     const fileInput = event.target;
   //     if (fileInput.files && fileInput.files.length > 0) {
@@ -195,14 +201,14 @@ const UserManagement = () => {
         return (
           <span className="px-2.5 py-0.5 text-xs font-medium rounded border bg-green-100 border-transparent text-green-500 dark:bg-green-500/20 dark:border-transparent inline-flex items-center status">
             <CheckCircle className="size-3 mr-1.5" />
-            {item}
+            Đang hoạt động
           </span>
         );
       case USER_STATUS.inactive:
         return (
           <span className="px-2.5 py-0.5 inline-flex items-center text-xs font-medium rounded border bg-slate-100 border-transparent text-slate-500 dark:bg-slate-500/20 dark:text-zink-200 dark:border-transparent status">
             <Loader className="size-3 mr-1.5" />
-            {item}
+            Không hoạt động
           </span>
         );
       default:
@@ -371,12 +377,6 @@ const UserManagement = () => {
     [],
   );
 
-  const options = [
-    { value: "status", label: "Trạng thái" },
-    { value: USER_STATUS.active, label: "Hoạt động" },
-    { value: USER_STATUS.inactive, label: "Không hoạt động" },
-  ];
-
   const handleChange = (selectedOption: any) => {
     if (selectedOption.value === "status") {
       setUser(userList);
@@ -400,7 +400,7 @@ const UserManagement = () => {
       <div className="grid grid-cols-1 gap-x-5 xl:grid-cols-12">
         <div className="xl:col-span-12">
           <div className="card" id="usersTable">
-            <div className="card-body">
+            {/* <div className="card-body">
               <div className="flex items-center">
                 <h6 className="text-15 grow">Danh sách người dùng</h6>
                 <div className="shrink-0">
@@ -414,15 +414,15 @@ const UserManagement = () => {
                   </button>
                 </div>
               </div>
-            </div>
+            </div> */}
             <div className="!py-3.5 card-body border-y border-dashed border-slate-200 dark:border-zink-500">
               <form action="#!">
                 <div className="grid grid-cols-1 gap-5 xl:grid-cols-12">
-                  <div className="relative xl:col-span-2">
+                  <div className="relative xl:col-span-3">
                     <input
                       type="text"
                       className="ltr:pl-8 rtl:pr-8 search form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
-                      placeholder="Search for name, email, phone number etc..."
+                      placeholder="Tìm họ tên, số điện thoại,..."
                       autoComplete="off"
                       onChange={(e) => filterSearchData(e)}
                     />
@@ -438,7 +438,19 @@ const UserManagement = () => {
                       id="choices-single-default"
                     />
                   </div>
-                  <div className="xl:col-span-3 xl:col-start-10">
+                  <div className="xl:col-span-2 xl:col-end-13">
+                    <div className="xl:justify-end flex">
+                      <button
+                        type="button"
+                        className="text-white btn bg-custom-500 border-custom-500 hover:text-white hover:bg-custom-600 hover:border-custom-600 focus:text-white focus:bg-custom-600 focus:border-custom-600 focus:ring focus:ring-custom-100 active:text-white active:bg-custom-600 active:border-custom-600 active:ring active:ring-custom-100 dark:ring-custom-400/20"
+                        onClick={toggle}
+                      >
+                        <Plus className="inline-block size-4" />{" "}
+                        <span className="align-middle">Tạo mới</span>
+                      </button>
+                    </div>
+                  </div>
+                  {/* <div className="xl:col-span-3 xl:col-start-10">
                     <div className="flex gap-2 xl:justify-end">
                       <div>
                         <button
@@ -453,7 +465,7 @@ const UserManagement = () => {
                         <SlidersHorizontal className="size-4" />
                       </button>
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               </form>
             </div>

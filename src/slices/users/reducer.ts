@@ -48,7 +48,6 @@ const UsersSlice = createSlice({
     });
     // Delete
     builder.addCase(deleteUserList.fulfilled, (state: any, action: any) => {
-      console.log({ action, state });
       if (!action.payload) return;
 
       state.userList = state.userList.filter(

@@ -36,22 +36,28 @@ const menuData: any = [
     isTitle: true,
   },
   {
-    id: "goods-dashboard",
+    id: "product-dashboard",
     label: "Quản lý hàng hóa",
     link: "/#",
     icon: <PictureInPicture2 />,
     subItems: [
       {
-        id: "goods-page",
+        id: "create-product-page",
+        label: "Tạo mới",
+        link: "/products/create",
+        parentId: "product-dashboard",
+      },
+      {
+        id: "products-page",
         label: "Hàng hóa",
-        link: "/goods",
-        parentId: "goods-dashboard",
+        link: "/products",
+        parentId: "product-dashboard",
       },
       {
         id: "inventory-page",
         label: "Kho, hàng tồn",
         link: "/inventory",
-        parentId: "goods-dashboard",
+        parentId: "product-dashboard",
       },
     ],
   },
