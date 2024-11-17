@@ -1,7 +1,15 @@
-import React, { useEffect, useMemo, useState, useRef, useCallback } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+  useCallback,
+} from "react";
 import Flatpickr from "react-flatpickr";
 import { Link } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
+import { PaginationState } from "@tanstack/react-table";
+import debounce from "lodash.debounce";
 
 // react-redux
 import { useDispatch, useSelector } from "react-redux";
@@ -27,10 +35,11 @@ import {
   getProductList as onGetProductList,
   deleteProductList as onDeleteProductList,
 } from "slices/thunk";
-import filterDataBySearch from "Common/filterDataBySearch";
 
 import ImportProductModal from "./components/ImportProductModal";
-import { PaginationState } from "@tanstack/react-table";
+import CreateProductModal from "./components/CreateProductModal";
+import ShowBarcodeModal from "./components/ShowBarcodeModal";
+import { formatMoney } from "helpers/utils";
 
 const PRODUCT_STATUS = {
   draft: "draft",
@@ -51,41 +60,60 @@ const ProductList = () => {
 
   const { productList, pagination } = useSelector(selectDataList);
 
-  const [data, setData] = useState<any>([]);
-  const [eventData, setEventData] = useState<any>();
+  const [eventData, setEventData] = useState<any>({});
   const importInputFile = useRef(null);
 
+  // Modals
   const [deleteModal, setDeleteModal] = useState<boolean>(false);
   const [importModal, setImportModal] = useState<boolean>(false);
+  const [createProductModal, setCreateProductModal] = useState<boolean>(false);
+  const [showBarcodeModal, setShowBarcodeModal] = useState<boolean>(false);
+
   const [fileImport, setFileImport] = useState(null);
 
   const [paginationData, setPaginationData] = React.useState<PaginationState>({
     pageIndex: 0,
     pageSize: pagination.limit || 10,
-  })
+  });
 
   const fetchProducts = useCallback(() => {
-    dispatch(onGetProductList({
-      page: paginationData.pageIndex + 1,
-      limit: paginationData.pageSize,
-    }));
-  }, [dispatch, paginationData])
+    dispatch(
+      onGetProductList({
+        page: paginationData.pageIndex + 1,
+        limit: paginationData.pageSize,
+      }),
+    );
+  }, [dispatch, paginationData]);
 
   // Get Data
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
 
-  useEffect(() => {
-    if (!productList.length) return;
-
-    setData(productList);
-  }, [productList]);
-
   const deleteToggle = () => setDeleteModal(!deleteModal);
   const importModalToggle = () => setImportModal(!importModal);
+  const showBarcodeModalToggle = () => setShowBarcodeModal(!showBarcodeModal);
+  const createProductModalToggle = () => {
+    setCreateProductModal(!createProductModal);
+    setEventData({});
+  };
 
-  // Delete Data
+  const onClickCreateProduct = (cell: any) => {
+    setCreateProductModal(true);
+
+    if (cell.id) {
+      setEventData(cell);
+    }
+  };
+
+  const onClickShowBarcode = (cell: any) => {
+    setShowBarcodeModal(true);
+
+    if (cell.productCode) {
+      setEventData(cell);
+    }
+  };
+
   const onClickDelete = (cell: any) => {
     setDeleteModal(true);
 
@@ -103,17 +131,17 @@ const ProductList = () => {
 
   // Search Data
   const filterSearchData = (e: any) => {
-    const search = e.target.value;
-    const keysToSearch = ["productCode", "productName", "category", "status"];
-    filterDataBySearch(productList, search, keysToSearch, setData);
+    // const search = e.target.value;
+    // const keysToSearch = ["productCode", "productName", "category", "status"];
+    // filterDataBySearch(productList, search, keysToSearch, setData);
   };
 
   const onClickImportFile = () => {
     const button: any = importInputFile.current;
-    if(importInputFile && button) {
+    if (importInputFile && button) {
       button.click();
     }
-  }
+  };
 
   const handleImportFileUpload = (e: any) => {
     const { files } = e.target;
@@ -130,38 +158,9 @@ const ProductList = () => {
       setImportModal(true);
 
       const button: any = importInputFile.current;
-      if(importInputFile && button) {
+      if (importInputFile && button) {
         button.value = "";
       }
-    }
-  };
-
-  const Status = ({ item }: any) => {
-    switch (item) {
-      case PRODUCT_STATUS.draft:
-        return (
-          <span className="status px-2.5 py-0.5 inline-block text-xs font-medium rounded border bg-orange-100 border-transparent text-orange-500 dark:bg-orange-500/20 dark:border-transparent">
-            Nháp
-          </span>
-        );
-      case PRODUCT_STATUS.active:
-        return (
-          <span className="status px-2.5 py-0.5 inline-block text-xs font-medium rounded border bg-green-100 border-transparent text-green-500 dark:bg-green-500/20 dark:border-transparent">
-            Hoạt động
-          </span>
-        );
-      case PRODUCT_STATUS.inactive:
-        return (
-          <span className="status px-2.5 py-0.5 inline-block text-xs font-medium rounded border bg-red-100 border-transparent text-red-500 dark:bg-red-500/20 dark:border-transparent">
-            Không hoạt động
-          </span>
-        );
-      default:
-        return (
-          <span className="status px-2.5 py-0.5 inline-block text-xs font-medium rounded border bg-green-100 border-transparent text-green-500 dark:bg-green-500/20 dark:border-transparent">
-            {item}
-          </span>
-        );
     }
   };
 
@@ -186,17 +185,17 @@ const ProductList = () => {
         enableColumnFilter: false,
         enableSorting: true,
         cell: (cell: any) => (
-          <Link
-            to="/apps-ecommerce-product-overview"
-            className="flex items-center gap-2"
-          >
-            {/* <img
-              src={cell.row.original.img}
-              alt="Product images"
-              className="h-6"
-            /> */}
-            <h6 className="product_name">{cell.getValue()}</h6>
-          </Link>
+          <h6 className="product_name">{cell.getValue()}</h6>
+          // <Link
+          //   to="/apps-ecommerce-product-overview"
+          //   className="flex items-center gap-2"
+          // >
+          //   <img
+          //     src={cell.row.original.img}
+          //     alt="Product images"
+          //     className="h-6"
+          //   />
+          // </Link>
         ),
       },
       {
@@ -214,12 +213,18 @@ const ProductList = () => {
         accessorKey: "sellingPrice",
         enableColumnFilter: false,
         enableSorting: true,
+        cell: (cell: any) => {
+          return formatMoney(cell.getValue());
+        },
       },
       {
         header: "Giá vốn",
         accessorKey: "costPrice",
         enableColumnFilter: false,
         enableSorting: true,
+        cell: (cell: any) => {
+          return formatMoney(cell.getValue());
+        },
       },
       {
         header: "ĐVT",
@@ -283,6 +288,19 @@ const ProductList = () => {
               aria-labelledby="productAction1"
             >
               <li>
+                <a
+                  href="#!"
+                  className="block px-4 py-1.5 text-base transition-all duration-200 ease-linear text-slate-600 dropdown-item hover:bg-slate-100 hover:text-slate-500 focus:bg-slate-100 focus:text-slate-500 dark:text-zink-100 dark:hover:bg-zink-500 dark:hover:text-zink-200 dark:focus:bg-zink-500 dark:focus:text-zink-200"
+                  onClick={() => {
+                    const data = cell.row.original;
+                    onClickShowBarcode(data);
+                  }}
+                >
+                  <Eye className="inline-block size-3 ltr:mr-1 rtl:ml-1" />{" "}
+                  <span className="align-middle">In tem mã</span>
+                </a>
+              </li>
+              <li>
                 <Link
                   className="block px-4 py-1.5 text-base transition-all duration-200 ease-linear text-slate-600 dropdown-item hover:bg-slate-100 hover:text-slate-500 focus:bg-slate-100 focus:text-slate-500 dark:text-zink-100 dark:hover:bg-zink-500 dark:hover:text-zink-200 dark:focus:bg-zink-500 dark:focus:text-zink-200"
                   to="/apps-ecommerce-product-overview"
@@ -292,13 +310,18 @@ const ProductList = () => {
                 </Link>
               </li>
               <li>
-                <Link
+                <a
+                  href="#!"
                   className="block px-4 py-1.5 text-base transition-all duration-200 ease-linear text-slate-600 dropdown-item hover:bg-slate-100 hover:text-slate-500 focus:bg-slate-100 focus:text-slate-500 dark:text-zink-100 dark:hover:bg-zink-500 dark:hover:text-zink-200 dark:focus:bg-zink-500 dark:focus:text-zink-200"
-                  to="/apps-ecommerce-product-create"
+                  onClick={() => {
+                    const data = cell.row.original;
+                    console.log({ data });
+                    onClickCreateProduct(cell.row.original);
+                  }}
                 >
                   <FileEdit className="inline-block size-3 ltr:mr-1 rtl:ml-1" />{" "}
                   <span className="align-middle">Cập nhật</span>
-                </Link>
+                </a>
               </li>
               <li>
                 <Link
@@ -335,20 +358,32 @@ const ProductList = () => {
         onCancel={importModalToggle}
         onDone={fetchProducts}
       />
+      <CreateProductModal
+        show={createProductModal}
+        onCancel={createProductModalToggle}
+        defaultData={eventData}
+      />
+      {eventData?.productCode && (
+        <ShowBarcodeModal
+          barcode={eventData.productCode}
+          show={showBarcodeModal}
+          onClose={showBarcodeModalToggle}
+        />
+      )}
       <ToastContainer closeButton={false} limit={1} />
       <div className="card" id="productListTable">
         <div className="card-body">
           <div className="flex items-center">
             <h6 className="text-15 grow">Danh sách hàng hóa</h6>
             <div className="shrink-0">
-              <Link
-                to="/products/create"
+              <button
                 type="button"
                 className="text-white btn bg-custom-500 border-custom-500 hover:text-white hover:bg-custom-600 hover:border-custom-600 focus:text-white focus:bg-custom-600 focus:border-custom-600 focus:ring focus:ring-custom-100 active:text-white active:bg-custom-600 active:border-custom-600 active:ring active:ring-custom-100 dark:ring-custom-400/20"
+                onClick={onClickCreateProduct}
               >
                 <Plus className="inline-block size-4" />{" "}
                 <span className="align-middle">Tạo mới</span>
-              </Link>
+              </button>
             </div>
           </div>
         </div>
@@ -361,7 +396,7 @@ const ProductList = () => {
                   className="ltr:pl-8 rtl:pr-8 search form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
                   placeholder="Tìm mã, tên hàng,..."
                   autoComplete="off"
-                  onChange={(e) => filterSearchData(e)}
+                  onChange={debounce(filterSearchData, 700)}
                 />
                 <Search className="inline-block size-4 absolute ltr:left-2.5 rtl:right-2.5 top-2.5 text-slate-500 dark:text-zink-200 fill-slate-100 dark:fill-zink-600" />
               </div>
@@ -409,11 +444,11 @@ const ProductList = () => {
         </div>
         {/* List Product */}
         <div className="!pt-1 card-body">
-          {data && data.length > 0 ? (
+          {productList && productList.length > 0 ? (
             <TableCustom
               isPagination={true}
               columns={columns || []}
-              data={data || []}
+              data={productList}
               totalData={pagination.totalItems}
               pageCount={pagination.totalPages}
               pagination={paginationData}
@@ -445,3 +480,32 @@ const ProductList = () => {
 };
 
 export default ProductList;
+
+const Status = ({ item }: any) => {
+  switch (item) {
+    case PRODUCT_STATUS.draft:
+      return (
+        <span className="status px-2.5 py-0.5 inline-block text-xs font-medium rounded border bg-orange-100 border-transparent text-orange-500 dark:bg-orange-500/20 dark:border-transparent">
+          Nháp
+        </span>
+      );
+    case PRODUCT_STATUS.active:
+      return (
+        <span className="status px-2.5 py-0.5 inline-block text-xs font-medium rounded border bg-green-100 border-transparent text-green-500 dark:bg-green-500/20 dark:border-transparent">
+          Hoạt động
+        </span>
+      );
+    case PRODUCT_STATUS.inactive:
+      return (
+        <span className="status px-2.5 py-0.5 inline-block text-xs font-medium rounded border bg-red-100 border-transparent text-red-500 dark:bg-red-500/20 dark:border-transparent">
+          Không hoạt động
+        </span>
+      );
+    default:
+      return (
+        <span className="status px-2.5 py-0.5 inline-block text-xs font-medium rounded border bg-green-100 border-transparent text-green-500 dark:bg-green-500/20 dark:border-transparent">
+          {item}
+        </span>
+      );
+  }
+};

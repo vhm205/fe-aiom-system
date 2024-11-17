@@ -41,12 +41,12 @@ const menuData: any = [
     link: "/#",
     icon: <PictureInPicture2 />,
     subItems: [
-      {
-        id: "create-product-page",
-        label: "Tạo mới",
-        link: "/products/create",
-        parentId: "product-dashboard",
-      },
+      // {
+      //   id: "create-product-page",
+      //   label: "Tạo mới",
+      //   link: "/products/create",
+      //   parentId: "product-dashboard",
+      // },
       {
         id: "products-page",
         label: "Hàng hóa",

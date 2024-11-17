@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import { ColumnDef } from "@tanstack/react-table";
 import TableContainer from "Common/TableContainer";
 import { request } from "helpers/axios";
+import { formatMoney } from "helpers/utils";
 
 interface props {
   show: boolean;
@@ -18,28 +19,36 @@ interface ExcelData {
   [key: string]: string | number;
 }
 
-const ImportProductModal: React.FC<props> = ({ show, file, onCancel, onDone }) => {
+const ImportProductModal: React.FC<props> = ({
+  show,
+  file,
+  onCancel,
+  onDone,
+}) => {
   const [excelData, setExcelData] = useState<ExcelData[]>([]);
   const [isLoading, setLoading] = useState(false);
   const [isButtonLoading, setButtonLoading] = useState(false);
+  const [importType, setImportType] = useState("1");
 
   const columns = React.useMemo<ColumnDef<ExcelData>[]>(() => {
     if (excelData.length === 0) return [];
 
     return Object.keys(excelData[0]).map((key) => ({
-      accessorKey: key,
       header: key,
+      accessorKey: key,
       enableColumnFilter: false,
       enableSorting: false,
+      cell: (cell: any) => {
+        const columnsMoneyTypes = ["Giá vốn", "Giá bán"];
+
+        if (columnsMoneyTypes.includes(key)) {
+          return formatMoney(cell.getValue());
+        }
+
+        return cell.getValue();
+      },
     }));
   }, [excelData]);
-
-  // const table = useReactTable({
-  //   data: excelData,
-  //   columns,
-  //   getCoreRowModel: getCoreRowModel(),
-  //   getPaginationRowModel: getPaginationRowModel(),
-  // })
 
   const handleImportProduct = async () => {
     setButtonLoading(true);
@@ -49,7 +58,7 @@ const ImportProductModal: React.FC<props> = ({ show, file, onCancel, onDone }) =
     formData.append("file", file);
 
     try {
-      await request.post("/products/import", formData, {
+      await request.post(`/products/import?type=${importType}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
@@ -62,6 +71,11 @@ const ImportProductModal: React.FC<props> = ({ show, file, onCancel, onDone }) =
       handleClose();
       onDone?.();
     }
+  };
+
+  const onRadioImportTypeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setImportType(value);
   };
 
   const handleClose = () => {
@@ -111,13 +125,13 @@ const ImportProductModal: React.FC<props> = ({ show, file, onCancel, onDone }) =
           <h5 className="text-16">Preview</h5>
         </Modal.Header>
         <Modal.Body className="max-h-[calc(theme('height.screen')_-_180px)] min-h-[calc(theme('height.screen')_-_500px)] p-4 overflow-y-auto">
-          {isLoading && (
+          {isLoading && !excelData.length && (
             <div className="min-h-[calc(theme('height.screen')_-_500px)] inset-0 flex items-center justify-center bg-opacity-50">
               <div className="inline-block size-10 border-2 rounded-full animate-spin border-l-transparent border-custom-500"></div>
             </div>
           )}
 
-          {!!excelData.length && (
+          {!!excelData.length && !isLoading && (
             <TableContainer
               isPagination={true}
               isSelect={false}
@@ -132,67 +146,61 @@ const ImportProductModal: React.FC<props> = ({ show, file, onCancel, onDone }) =
               PaginationClassName="flex flex-col items-center gap-4 px-4 mt-4 md:flex-row"
             />
           )}
-
-          {/* {excelData.length > 0 && (
-                <div className="overflow-auto">
-                  <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-lg">
-                    <thead>
-                      {table.getHeaderGroups().map((headerGroup) => (
-                        <tr key={headerGroup.id}>
-                          {headerGroup.headers.map((header: any) => (
-                            <th key={header.id} className="px-4 py-2 border-b font-medium text-gray-700 bg-gray-100">
-                              {header.isPlaceholder ? null : (
-                                flexRender(
-                                  header.column.columnDef.header,
-                                  header.getContext()
-                                )
-                              )}
-                            </th>
-                          ))}
-                        </tr>
-                      ))}
-                    </thead>
-                    <tbody>
-                      {table.getRowModel().rows.map((row) => (
-                        <tr key={row.id} className="border-b">
-                          {row.getVisibleCells().map((cell: any) => (
-                            <td key={cell.id} className="px-4 py-2 text-gray-600">
-                              {flexRender(
-                                cell.column.columnDef.cell,
-                                cell.getContext()
-                              )}
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )} */}
         </Modal.Body>
-        <Modal.Footer className="flex items-center justify-end p-4 mt-auto border-t border-slate-200 dark:border-zink-500">
-          <div className="flex justify-between">
-            <button
-              type="reset"
-              className="bg-white text-slate-500 btn hover:text-slate-500 hover:bg-slate-100 focus:text-slate-500 focus:bg-slate-100 active:text-slate-500 active:bg-slate-100 dark:bg-zink-600 dark:hover:bg-slate-500/10 dark:focus:bg-slate-500/10 dark:active:bg-slate-500/10 mr-2"
-              onClick={onCancel}
-            >
-              Hủy bỏ
-            </button>
-            <button
-              type="button"
-              className="flex items-center text-white btn bg-custom-500 border-custom-500 hover:text-white hover:bg-custom-600 hover:border-custom-600 focus:text-white focus:bg-custom-600 focus:border-custom-600 focus:ring focus:ring-custom-100 active:text-white active:bg-custom-600 active:border-custom-600 active:ring active:ring-custom-100 dark:ring-custom-400/20"
-              onClick={handleImportProduct}
-            >
-              {isButtonLoading ? (
-                <>
-                  <Loader2 className="size-4 ltr:mr-2 rtl:ml-2 animate-spin" />
-                  Processing...
-                </>
-              ) : (
-                `Xác nhận`
-              )}
-            </button>
+        <Modal.Footer>
+          <div className="flex items-center justify-between p-4 mt-auto border-t border-slate-200 dark:border-zink-500">
+            <div className="flex flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <input
+                  id="radioInline1"
+                  name="InlineRadio"
+                  className="size-4 border rounded-full appearance-none cursor-pointer bg-slate-100 border-slate-200 dark:bg-zink-600 dark:border-zink-500 checked:bg-custom-500 checked:border-custom-500 dark:checked:bg-custom-500 dark:checked:border-custom-500"
+                  type="radio"
+                  value="1"
+                  defaultChecked
+                  onChange={onRadioImportTypeChange}
+                />
+                <label htmlFor="radioInline1" className="align-middle">
+                  Bỏ qua nếu trùng
+                </label>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  id="radioInline2"
+                  name="InlineRadio"
+                  className="size-4 border rounded-full appearance-none cursor-pointer bg-slate-100 border-slate-200 dark:bg-zink-600 dark:border-zink-500 checked:bg-custom-500 checked:border-custom-500 dark:checked:bg-custom-500 dark:checked:border-custom-500"
+                  type="radio"
+                  value="2"
+                  onChange={onRadioImportTypeChange}
+                />
+                <label htmlFor="radioInline2" className="align-middle">
+                  Cập nhật nếu trùng
+                </label>
+              </div>
+            </div>
+            <div className="flex justify-between">
+              <button
+                type="reset"
+                className="bg-white text-slate-500 btn hover:text-slate-500 hover:bg-slate-100 focus:text-slate-500 focus:bg-slate-100 active:text-slate-500 active:bg-slate-100 dark:bg-zink-600 dark:hover:bg-slate-500/10 dark:focus:bg-slate-500/10 dark:active:bg-slate-500/10 mr-2"
+                onClick={onCancel}
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="button"
+                className="flex items-center text-white btn bg-custom-500 border-custom-500 hover:text-white hover:bg-custom-600 hover:border-custom-600 focus:text-white focus:bg-custom-600 focus:border-custom-600 focus:ring focus:ring-custom-100 active:text-white active:bg-custom-600 active:border-custom-600 active:ring active:ring-custom-100 dark:ring-custom-400/20"
+                onClick={handleImportProduct}
+              >
+                {isButtonLoading ? (
+                  <>
+                    <Loader2 className="size-4 ltr:mr-2 rtl:ml-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  `Xác nhận`
+                )}
+              </button>
+            </div>
           </div>
         </Modal.Footer>
       </Modal>
@@ -201,4 +209,3 @@ const ImportProductModal: React.FC<props> = ({ show, file, onCancel, onDone }) =
 };
 
 export default ImportProductModal;
-

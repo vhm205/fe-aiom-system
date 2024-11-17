@@ -3,8 +3,6 @@ import BreadCrumb from "Common/BreadCrumb";
 import { Link } from "react-router-dom";
 import { Dropdown } from "Common/Components/Dropdown";
 import TableContainer from "Common/TableContainer";
-// import Flatpickr from "react-flatpickr";
-// import moment from "moment";
 import Select from "react-select";
 
 // Icons
@@ -17,15 +15,9 @@ import {
   CheckCircle,
   Loader,
   X,
-  Download,
-  SlidersHorizontal,
-  // ImagePlus,
 } from "lucide-react";
 import Modal from "Common/Components/Modal";
 import DeleteModal from "Common/DeleteModal";
-
-// Images
-// import dummyImg from "assets/images/users/user-dummy-img.jpg";
 
 // react-redux
 import { useDispatch, useSelector } from "react-redux";
@@ -235,7 +227,7 @@ const UserManagement = () => {
         ),
         enableSorting: false,
         id: "checkAll",
-        cell: (cell: any) => {
+        cell: (_cell: any) => {
           return (
             <div className="flex items-center h-full">
               <input

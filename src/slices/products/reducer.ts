@@ -4,11 +4,17 @@ import {
   addProductList,
   updateProductList,
   deleteProductList,
+  getCategories,
+  getSuppliers,
+  getUnits,
 } from "./thunk";
 
 export const initialState = {
   productList: [],
   pagination: {},
+  categoryList: [],
+  supplierList: [],
+  unitList: [],
   error: {},
 };
 
@@ -53,12 +59,26 @@ const ProductSlice = createSlice({
       if (!action.payload) return;
 
       state.productList = state.productList.filter(
-        (product: any) =>
-          product.id.toString() !== action.payload.toString(),
+        (product: any) => product.id.toString() !== action.payload.toString(),
       );
     });
     builder.addCase(deleteProductList.rejected, (state: any, action: any) => {
       state.error = action.payload.error || null;
+    });
+    // get category
+    builder.addCase(getCategories.fulfilled, (state: any, action: any) => {
+      if (!action.payload) return;
+      state.categoryList = action.payload?.data;
+    });
+    // get suppliers
+    builder.addCase(getSuppliers.fulfilled, (state: any, action: any) => {
+      if (!action.payload) return;
+      state.supplierList = action.payload?.data;
+    });
+    // get units
+    builder.addCase(getUnits.fulfilled, (state: any, action: any) => {
+      if (!action.payload) return;
+      state.unitList = action.payload?.data;
     });
   },
 });

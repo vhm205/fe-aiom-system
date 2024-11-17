@@ -12,14 +12,14 @@ import {
   getSortedRowModel,
   flexRender,
   PaginationState,
-} from '@tanstack/react-table';
+} from "@tanstack/react-table";
 
-import { rankItem } from '@tanstack/match-sorter-utils';
+import { rankItem } from "@tanstack/match-sorter-utils";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 // Column Filter
 const Filter = ({
-  column
+  column,
 }: {
   column: Column<any, unknown>;
   table: ReactTable<any>;
@@ -30,11 +30,11 @@ const Filter = ({
     <>
       <DebouncedInput
         type="text"
-        value={(columnFilterValue ?? '') as string}
-        onChange={value => column.setFilterValue(value)}
+        value={(columnFilterValue ?? "") as string}
+        onChange={(value) => column.setFilterValue(value)}
         placeholder="Search..."
         className="w-36 border shadow rounded"
-        list={column.id + 'list'}
+        list={column.id + "list"}
       />
       <div className="h-1" />
     </>
@@ -51,7 +51,7 @@ const DebouncedInput = ({
   value: string | number;
   onChange: (value: string | number) => void;
   debounce?: number;
-} & Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'>) => {
+} & Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange">) => {
   const [value, setValue] = useState(initialValue);
 
   useEffect(() => {
@@ -67,7 +67,11 @@ const DebouncedInput = ({
   }, [debounce, onChange, value]);
 
   return (
-    <input {...props} value={value} onChange={e => setValue(e.target.value)} />
+    <input
+      {...props}
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+    />
   );
 };
 
@@ -116,16 +120,15 @@ const TableCustom = ({
   customPageSize,
   isGlobalFilter,
   PaginationClassName,
-  SearchPlaceholder
+  SearchPlaceholder,
 }: TableCustomProps) => {
-
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [globalFilter, setGlobalFilter] = useState('');
+  const [globalFilter, setGlobalFilter] = useState("");
 
   const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
     const itemRank = rankItem(row.getValue(columnId), value);
     addMeta({
-      itemRank
+      itemRank,
     });
     return itemRank.passed;
   };
@@ -149,14 +152,13 @@ const TableCustom = ({
     globalFilterFn: fuzzyFilter,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    getSortedRowModel: getSortedRowModel()
+    getSortedRowModel: getSortedRowModel(),
   });
 
   const {
     getHeaderGroups,
     getFooterGroups,
     getRowModel,
-    getPageOptions,
     setPageSize,
     getState,
     getCanPreviousPage,
@@ -169,17 +171,39 @@ const TableCustom = ({
     Number(customPageSize) && setPageSize(Number(customPageSize));
   }, [customPageSize, setPageSize]);
 
+  const lastPage = () => {
+    if (getCanNextPage() && setPaginationData && pageCount) {
+      const state = getState().pagination;
+      setPaginationData({
+        ...state,
+        pageIndex: pageCount - 1,
+      });
+    }
+  };
+
+  const firstPage = () => {
+    if (getCanPreviousPage() && setPaginationData) {
+      const state = getState().pagination;
+      setPaginationData({
+        ...state,
+        pageIndex: 0,
+      });
+    }
+  };
+
   return (
     <Fragment>
-
       <div className="grid grid-cols-12 lg:grid-cols-12 gap-3">
-        {
-          isSelect &&
+        {isSelect && (
           <div className="self-center col-span-12 lg:col-span-6">
-            <label>Show
-              <select name="basic_tables_length" aria-controls="basic_tables"
+            <label>
+              Show
+              <select
+                name="basic_tables_length"
+                aria-controls="basic_tables"
                 className="px-3 py-2 form-select border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200 inline-block w-auto"
-                onClick={(event: any) => setPageSize(event.target.value)}>
+                onClick={(event: any) => setPageSize(event.target.value)}
+              >
                 <option value="10">10</option>
                 <option value="25">25</option>
                 <option value="50">50</option>
@@ -187,44 +211,48 @@ const TableCustom = ({
               </select>
             </label>
           </div>
-        }
+        )}
 
         <div className="self-center col-span-12 lg:col-span-6 lg:place-self-end">
-          {isGlobalFilter &&
-            <label>Search: <DebouncedInput
-              value={globalFilter ?? ''}
-              onChange={value => setGlobalFilter(String(value))}
-              className="py-2 pr-4 text-sm text-topbar-item bg-topbar border border-topbar-border rounded pl-2 placeholder:text-slate-400 form-control focus-visible:outline-0 min-w-[200px] focus:border-blue-400 group-data-[topbar=dark]:bg-topbar-dark group-data-[topbar=dark]:border-topbar-border-dark group-data-[topbar=dark]:placeholder:text-slate-500 group-data-[topbar=dark]:text-topbar-item-dark group-data-[topbar=brand]:bg-topbar-brand group-data-[topbar=brand]:border-topbar-border-brand group-data-[topbar=brand]:placeholder:text-blue-300 group-data-[topbar=brand]:text-topbar-item-brand group-data-[topbar=dark]:dark:bg-zink-700 group-data-[topbar=dark]:dark:border-zink-500 group-data-[topbar=dark]:dark:text-zink-100"
-              placeholder={SearchPlaceholder}
-            />
+          {isGlobalFilter && (
+            <label>
+              Search:{" "}
+              <DebouncedInput
+                value={globalFilter ?? ""}
+                onChange={(value) => setGlobalFilter(String(value))}
+                className="py-2 pr-4 text-sm text-topbar-item bg-topbar border border-topbar-border rounded pl-2 placeholder:text-slate-400 form-control focus-visible:outline-0 min-w-[200px] focus:border-blue-400 group-data-[topbar=dark]:bg-topbar-dark group-data-[topbar=dark]:border-topbar-border-dark group-data-[topbar=dark]:placeholder:text-slate-500 group-data-[topbar=dark]:text-topbar-item-dark group-data-[topbar=brand]:bg-topbar-brand group-data-[topbar=brand]:border-topbar-border-brand group-data-[topbar=brand]:placeholder:text-blue-300 group-data-[topbar=brand]:text-topbar-item-brand group-data-[topbar=dark]:dark:bg-zink-700 group-data-[topbar=dark]:dark:border-zink-500 group-data-[topbar=dark]:dark:text-zink-100"
+                placeholder={SearchPlaceholder}
+              />
             </label>
-          }
+          )}
         </div>
       </div>
 
       <div className={divclassName}>
         <table className={tableclassName}>
           <thead className={theadclassName}>
-            {getHeaderGroups().map(headerGroup => (
+            {getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id} className={trclassName}>
-                {headerGroup.headers.map(header => {
+                {headerGroup.headers.map((header) => {
                   return (
-                    <th key={header.id} colSpan={header.colSpan}
+                    <th
+                      key={header.id}
+                      colSpan={header.colSpan}
                       {...{
                         className: `${header.column.getCanSort()} ${thclassName}`,
                         onClick: header.column.getToggleSortingHandler(),
-                      }}>
+                      }}
+                    >
                       {header.isPlaceholder ? null : (
                         <React.Fragment>
                           {flexRender(
                             header.column.columnDef.header,
-                            header.getContext()
+                            header.getContext(),
                           )}
                           {{
-                            asc: ' ',
-                            desc: ' ',
-                          }
-                          [header.column.getIsSorted() as string] ?? null}
+                            asc: " ",
+                            desc: " ",
+                          }[header.column.getIsSorted() as string] ?? null}
                           {header.column.getCanFilter() ? (
                             <div>
                               <Filter column={header.column} table={table} />
@@ -240,15 +268,15 @@ const TableCustom = ({
           </thead>
 
           <tbody className={tbodyclassName}>
-            {getRowModel().rows.map(row => {
+            {getRowModel().rows.map((row) => {
               return (
                 <tr key={row.id} className={trclassName}>
-                  {row.getVisibleCells().map(cell => {
+                  {row.getVisibleCells().map((cell) => {
                     return (
                       <td key={cell.id} className={tdclassName}>
                         {flexRender(
                           cell.column.columnDef.cell,
-                          cell.getContext()
+                          cell.getContext(),
                         )}
                       </td>
                     );
@@ -258,67 +286,95 @@ const TableCustom = ({
             })}
           </tbody>
 
-          {isTfoot && <tfoot>
-            {
-              getFooterGroups()?.map((footer: any, tfKey: number) => (
+          {isTfoot && (
+            <tfoot>
+              {getFooterGroups()?.map((footer: any, tfKey: number) => (
                 <tr key={tfKey}>
-                  {
-                    footer.headers?.map((tf: any, key: number) => (
-                      <th key={key} className="p-3 text-left group-[.bordered]:border group-[.bordered]:border-slate-200 group-[.bordered]:dark:border-zink-500">
-                        {flexRender(
-                          tf.column.columnDef.header,
-                          tf.getContext()
-                        )}
-                      </th>
-                    ))
-                  }
+                  {footer.headers?.map((tf: any, key: number) => (
+                    <th
+                      key={key}
+                      className="p-3 text-left group-[.bordered]:border group-[.bordered]:border-slate-200 group-[.bordered]:dark:border-zink-500"
+                    >
+                      {flexRender(tf.column.columnDef.header, tf.getContext())}
+                    </th>
+                  ))}
                 </tr>
-              ))
-            }
-          </tfoot>}
+              ))}
+            </tfoot>
+          )}
         </table>
       </div>
 
-      {
-        isPagination && (
-          <div className={PaginationClassName}>
-            <div className="mb-4 grow md:mb-0">
-              <div className="text-slate-500 dark:text-zink-200">Showing
-                <b> {getState().pagination.pageSize}</b> of
-                <b> {totalData}</b> Results</div>
+      {isPagination && (
+        <div className={PaginationClassName}>
+          <div className="mb-4 grow md:mb-0">
+            <div className="text-slate-500 dark:text-zink-200">
+              Showing
+              <b> {getState().pagination.pageSize}</b> of
+              <b> {totalData}</b> Results
             </div>
-            <ul className="flex flex-wrap items-center gap-2 shrink-0">
-              <li>
-                <Link to="#!" className={`inline-flex items-center justify-center bg-white dark:bg-zink-700 h-8 px-3 transition-all duration-150 ease-linear border rounded border-slate-200 dark:border-zink-500 text-slate-500 dark:text-zink-200 hover:text-custom-500 dark:hover:text-custom-500 hover:bg-custom-50 dark:hover:bg-custom-500/10 focus:bg-custom-50 dark:focus:bg-custom-500/10 focus:text-custom-500 dark:focus:text-custom-500 [&.active]:text-custom-500 dark:[&.active]:text-custom-500 [&.active]:bg-custom-50 dark:[&.active]:bg-custom-500/10 [&.active]:border-custom-50 dark:[&.active]:border-custom-500/10 [&.active]:hover:text-custom-700 dark:[&.active]:hover:text-custom-700 [&.disabled]:text-slate-400 dark:[&.disabled]:text-zink-300 [&.disabled]:cursor-auto ${!getCanPreviousPage() && "disabled"}`}
+          </div>
+          <ul className="flex flex-wrap items-center gap-2 shrink-0">
+            <li>
+              <Link
+                to="#!"
+                className={`inline-flex items-center justify-center bg-white dark:bg-zink-700 h-8 px-3 transition-all duration-150 ease-linear border rounded border-slate-200 dark:border-zink-500 text-slate-500 dark:text-zink-200 hover:text-custom-500 dark:hover:text-custom-500 hover:bg-custom-50 dark:hover:bg-custom-500/10 focus:bg-custom-50 dark:focus:bg-custom-500/10 focus:text-custom-500 dark:focus:text-custom-500 [&.active]:text-custom-500 dark:[&.active]:text-custom-500 [&.active]:bg-custom-50 dark:[&.active]:bg-custom-500/10 [&.active]:border-custom-50 dark:[&.active]:border-custom-500/10 [&.active]:hover:text-custom-700 dark:[&.active]:hover:text-custom-700 [&.disabled]:text-slate-400 dark:[&.disabled]:text-zink-300 [&.disabled]:cursor-auto ${!getCanPreviousPage() && "disabled"}`}
+                onClick={firstPage}
+              >
+                <ChevronLeft className="size-4 mr-1 rtl:rotate-180"></ChevronLeft>{" "}
+                First
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="#!"
+                className={`inline-flex items-center justify-center bg-white dark:bg-zink-700 h-8 px-3 transition-all duration-150 ease-linear border rounded border-slate-200 dark:border-zink-500 text-slate-500 dark:text-zink-200 hover:text-custom-500 dark:hover:text-custom-500 hover:bg-custom-50 dark:hover:bg-custom-500/10 focus:bg-custom-50 dark:focus:bg-custom-500/10 focus:text-custom-500 dark:focus:text-custom-500 [&.active]:text-custom-500 dark:[&.active]:text-custom-500 [&.active]:bg-custom-50 dark:[&.active]:bg-custom-500/10 [&.active]:border-custom-50 dark:[&.active]:border-custom-500/10 [&.active]:hover:text-custom-700 dark:[&.active]:hover:text-custom-700 [&.disabled]:text-slate-400 dark:[&.disabled]:text-zink-300 [&.disabled]:cursor-auto ${!getCanPreviousPage() && "disabled"}`}
                 onClick={() => getCanPreviousPage() && previousPage()}
-                >
-                  <ChevronLeft className="size-4 mr-1 rtl:rotate-180"></ChevronLeft> Prev</Link>
-              </li>
-              {getPageOptions().map((item: any, key: number) => (
-                <React.Fragment key={key}>
-                  <li>
-                    <Link to="#" className={`inline-flex items-center justify-center bg-white dark:bg-zink-700 size-8 transition-all duration-150 ease-linear border rounded border-slate-200 dark:border-zink-500 text-slate-500 dark:text-zink-200 hover:text-custom-500 dark:hover:text-custom-500 hover:bg-custom-100 dark:hover:bg-custom-500/10 focus:bg-custom-50 dark:focus:bg-custom-500/10 focus:text-custom-500 dark:focus:text-custom-500 [&.active]:text-white dark:[&.active]:text-white [&.active]:bg-custom-500 dark:[&.active]:bg-custom-500 [&.active]:border-custom-500 dark:[&.active]:border-custom-500 [&.active]:hover:text-custom-700 dark:[&.active]:hover:text-custom-700 [&.disabled]:text-slate-400 dark:[&.disabled]:text-zink-300 [&.disabled]:cursor-auto ${getState().pagination.pageIndex === item && "active"}`}
-                    onClick={() => {
-                      if(!setPaginationData) return;
-                      setPaginationData((prev: any) => ({ ...prev, pageIndex: item }))
-                    }}
-                    >{item + 1}</Link>
-                  </li>
-                </React.Fragment>
-              ))}
-              <li>
-                <Link to="#!" className={`inline-flex items-center justify-center bg-white dark:bg-zink-700 h-8 px-3 transition-all duration-150 ease-linear border rounded border-slate-200 dark:border-zink-500 text-slate-500 dark:text-zink-200 hover:text-custom-500 dark:hover:text-custom-500 hover:bg-custom-50 dark:hover:bg-custom-500/10 focus:bg-custom-50 dark:focus:bg-custom-500/10 focus:text-custom-500 dark:focus:text-custom-500 [&.active]:text-custom-500 dark:[&.active]:text-custom-500 [&.active]:bg-custom-50 dark:[&.active]:bg-custom-500/10 [&.active]:border-custom-50 dark:[&.active]:border-custom-500/10 [&.active]:hover:text-custom-700 dark:[&.active]:hover:text-custom-700 [&.disabled]:text-slate-400 dark:[&.disabled]:text-zink-300 [&.disabled]:cursor-auto
+              >
+                <ChevronLeft className="size-4 mr-1 rtl:rotate-180"></ChevronLeft>{" "}
+                Prev
+              </Link>
+            </li>
+            {/* {getPageOptions().map((item: any, key: number) => ( */}
+            {/*   <React.Fragment key={key}> */}
+            {/*     <li> */}
+            {/*       <Link to="#" className={`inline-flex items-center justify-center bg-white dark:bg-zink-700 size-8 transition-all duration-150 ease-linear border rounded border-slate-200 dark:border-zink-500 text-slate-500 dark:text-zink-200 hover:text-custom-500 dark:hover:text-custom-500 hover:bg-custom-100 dark:hover:bg-custom-500/10 focus:bg-custom-50 dark:focus:bg-custom-500/10 focus:text-custom-500 dark:focus:text-custom-500 [&.active]:text-white dark:[&.active]:text-white [&.active]:bg-custom-500 dark:[&.active]:bg-custom-500 [&.active]:border-custom-500 dark:[&.active]:border-custom-500 [&.active]:hover:text-custom-700 dark:[&.active]:hover:text-custom-700 [&.disabled]:text-slate-400 dark:[&.disabled]:text-zink-300 [&.disabled]:cursor-auto ${getState().pagination.pageIndex === item && "active"}`} */}
+            {/*       onClick={() => { */}
+            {/*         if(!setPaginationData) return; */}
+            {/*         setPaginationData((prev: any) => ({ ...prev, pageIndex: item })) */}
+            {/*       }} */}
+            {/*       >{item + 1}</Link> */}
+            {/*     </li> */}
+            {/*   </React.Fragment> */}
+            {/* ))} */}
+            <li>
+              <Link
+                to="#!"
+                className={`inline-flex items-center justify-center bg-white dark:bg-zink-700 h-8 px-3 transition-all duration-150 ease-linear border rounded border-slate-200 dark:border-zink-500 text-slate-500 dark:text-zink-200 hover:text-custom-500 dark:hover:text-custom-500 hover:bg-custom-50 dark:hover:bg-custom-500/10 focus:bg-custom-50 dark:focus:bg-custom-500/10 focus:text-custom-500 dark:focus:text-custom-500 [&.active]:text-custom-500 dark:[&.active]:text-custom-500 [&.active]:bg-custom-50 dark:[&.active]:bg-custom-500/10 [&.active]:border-custom-50 dark:[&.active]:border-custom-500/10 [&.active]:hover:text-custom-700 dark:[&.active]:hover:text-custom-700 [&.disabled]:text-slate-400 dark:[&.disabled]:text-zink-300 [&.disabled]:cursor-auto
                 ${!getCanNextPage() && "disabled"}`}
                 onClick={() => getCanNextPage() && nextPage()}
-                >
-                  Next <ChevronRight className="size-4 ml-1 rtl:rotate-180"></ChevronRight> </Link>
-              </li>
-            </ul>
-          </div>
-        )
-      }
+              >
+                Next{" "}
+                <ChevronRight className="size-4 ml-1 rtl:rotate-180"></ChevronRight>{" "}
+              </Link>
+            </li>
+            <li>
+              <Link
+                to="#!"
+                className={`inline-flex items-center justify-center bg-white dark:bg-zink-700 h-8 px-3 transition-all duration-150 ease-linear border rounded border-slate-200 dark:border-zink-500 text-slate-500 dark:text-zink-200 hover:text-custom-500 dark:hover:text-custom-500 hover:bg-custom-50 dark:hover:bg-custom-500/10 focus:bg-custom-50 dark:focus:bg-custom-500/10 focus:text-custom-500 dark:focus:text-custom-500 [&.active]:text-custom-500 dark:[&.active]:text-custom-500 [&.active]:bg-custom-50 dark:[&.active]:bg-custom-500/10 [&.active]:border-custom-50 dark:[&.active]:border-custom-500/10 [&.active]:hover:text-custom-700 dark:[&.active]:hover:text-custom-700 [&.disabled]:text-slate-400 dark:[&.disabled]:text-zink-300 [&.disabled]:cursor-auto
+                ${!getCanNextPage() && "disabled"}`}
+                onClick={lastPage}
+              >
+                Last{" "}
+                <ChevronRight className="size-4 ml-1 rtl:rotate-180"></ChevronRight>{" "}
+              </Link>
+            </li>
+          </ul>
+        </div>
+      )}
     </Fragment>
   );
 };
 
 export default TableCustom;
+
