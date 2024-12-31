@@ -5,10 +5,10 @@ import React, {
   useRef,
   useCallback,
 } from "react";
-import Flatpickr from "react-flatpickr";
 import { Link } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import { PaginationState } from "@tanstack/react-table";
+import Select from "react-select";
 import debounce from "lodash.debounce";
 
 // react-redux
@@ -47,6 +47,13 @@ const PRODUCT_STATUS = {
   inactive: "inactive",
 };
 
+const optionsFilterStatus: any = [
+  { value: "", label: "Trạng thái" },
+  { value: PRODUCT_STATUS.draft, label: "Nháp" },
+  { value: PRODUCT_STATUS.active, label: "Hoạt động" },
+  { value: PRODUCT_STATUS.inactive, label: "Không hoạt động" },
+];
+
 const ProductList = () => {
   const dispatch = useDispatch<any>();
 
@@ -55,12 +62,14 @@ const ProductList = () => {
     (state) => ({
       productList: state.productList || [],
       pagination: state.pagination || {},
-    }),
+    })
   );
 
   const { productList, pagination } = useSelector(selectDataList);
 
   const [eventData, setEventData] = useState<any>({});
+  const [fileImport, setFileImport] = useState(null);
+  const [filters, setFilters] = useState<Record<string, string | number>>({});
   const importInputFile = useRef(null);
 
   // Modals
@@ -68,8 +77,6 @@ const ProductList = () => {
   const [importModal, setImportModal] = useState<boolean>(false);
   const [createProductModal, setCreateProductModal] = useState<boolean>(false);
   const [showBarcodeModal, setShowBarcodeModal] = useState<boolean>(false);
-
-  const [fileImport, setFileImport] = useState(null);
 
   const [paginationData, setPaginationData] = React.useState<PaginationState>({
     pageIndex: 0,
@@ -81,9 +88,10 @@ const ProductList = () => {
       onGetProductList({
         page: paginationData.pageIndex + 1,
         limit: paginationData.pageSize,
-      }),
+        ...filters,
+      })
     );
-  }, [dispatch, paginationData]);
+  }, [dispatch, filters, paginationData]);
 
   // Get Data
   useEffect(() => {
@@ -129,12 +137,31 @@ const ProductList = () => {
     }
   };
 
-  // Search Data
+  // Filter Data
   const filterSearchData = (e: any) => {
-    // const search = e.target.value;
-    // const keysToSearch = ["productCode", "productName", "category", "status"];
-    // filterDataBySearch(productList, search, keysToSearch, setData);
+    const keyword = e.target.value;
+    setFilters((prev) => ({
+      ...prev,
+      keyword,
+      page: 1,
+    }));
   };
+
+  const filterStatusData = (event: any) => {
+    if (event.value === "status") {
+      setFilters((prev) => ({
+        ...prev,
+        status: "",
+      }));
+    } else {
+      setFilters((prev) => ({
+        ...prev,
+        status: event.value,
+      }));
+    }
+  };
+
+  const resetFilters = () => setFilters({ status: "" });
 
   const onClickImportFile = () => {
     const button: any = importInputFile.current;
@@ -256,12 +283,6 @@ const ProductList = () => {
         enableColumnFilter: false,
         enableSorting: true,
       },
-      // {
-      //   header: "Hình ảnh",
-      //   accessorKey: "imageUrls",
-      //   enableColumnFilter: false,
-      //   enableSorting: true,
-      // },
       {
         header: "Trạng thái",
         accessorKey: "status",
@@ -300,24 +321,20 @@ const ProductList = () => {
                   <span className="align-middle">In tem mã</span>
                 </a>
               </li>
-              <li>
-                <Link
-                  className="block px-4 py-1.5 text-base transition-all duration-200 ease-linear text-slate-600 dropdown-item hover:bg-slate-100 hover:text-slate-500 focus:bg-slate-100 focus:text-slate-500 dark:text-zink-100 dark:hover:bg-zink-500 dark:hover:text-zink-200 dark:focus:bg-zink-500 dark:focus:text-zink-200"
-                  to="/apps-ecommerce-product-overview"
-                >
-                  <Eye className="inline-block size-3 ltr:mr-1 rtl:ml-1" />{" "}
-                  <span className="align-middle">Chi tiết</span>
-                </Link>
-              </li>
+              {/* <li> */}
+              {/*   <Link */}
+              {/*     className="block px-4 py-1.5 text-base transition-all duration-200 ease-linear text-slate-600 dropdown-item hover:bg-slate-100 hover:text-slate-500 focus:bg-slate-100 focus:text-slate-500 dark:text-zink-100 dark:hover:bg-zink-500 dark:hover:text-zink-200 dark:focus:bg-zink-500 dark:focus:text-zink-200" */}
+              {/*     to="/apps-ecommerce-product-overview" */}
+              {/*   > */}
+              {/*     <Eye className="inline-block size-3 ltr:mr-1 rtl:ml-1" />{" "} */}
+              {/*     <span className="align-middle">Chi tiết</span> */}
+              {/*   </Link> */}
+              {/* </li> */}
               <li>
                 <a
                   href="#!"
                   className="block px-4 py-1.5 text-base transition-all duration-200 ease-linear text-slate-600 dropdown-item hover:bg-slate-100 hover:text-slate-500 focus:bg-slate-100 focus:text-slate-500 dark:text-zink-100 dark:hover:bg-zink-500 dark:hover:text-zink-200 dark:focus:bg-zink-500 dark:focus:text-zink-200"
-                  onClick={() => {
-                    const data = cell.row.original;
-                    console.log({ data });
-                    onClickCreateProduct(cell.row.original);
-                  }}
+                  onClick={() => onClickCreateProduct(cell.row.original)}
                 >
                   <FileEdit className="inline-block size-3 ltr:mr-1 rtl:ml-1" />{" "}
                   <span className="align-middle">Cập nhật</span>
@@ -327,10 +344,7 @@ const ProductList = () => {
                 <Link
                   className="block px-4 py-1.5 text-base transition-all duration-200 ease-linear text-slate-600 dropdown-item hover:bg-slate-100 hover:text-slate-500 focus:bg-slate-100 focus:text-slate-500 dark:text-zink-100 dark:hover:bg-zink-500 dark:hover:text-zink-200 dark:focus:bg-zink-500 dark:focus:text-zink-200"
                   to="#!"
-                  onClick={() => {
-                    const data = cell.row.original;
-                    onClickDelete(data);
-                  }}
+                  onClick={() => onClickDelete(cell.row.original)}
                 >
                   <Trash2 className="inline-block size-3 ltr:mr-1 rtl:ml-1" />{" "}
                   <span className="align-middle">Xóa</span>
@@ -341,7 +355,7 @@ const ProductList = () => {
         ),
       },
     ],
-    [],
+    []
   );
 
   return (
@@ -401,19 +415,36 @@ const ProductList = () => {
                 <Search className="inline-block size-4 absolute ltr:left-2.5 rtl:right-2.5 top-2.5 text-slate-500 dark:text-zink-200 fill-slate-100 dark:fill-zink-600" />
               </div>
             </div>
-            <div className="xl:col-span-3">
-              <div>
-                <Flatpickr
-                  className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
-                  options={{
-                    dateFormat: "d M, Y",
-                    mode: "range",
-                  }}
-                  placeholder="Chọn ngày"
-                  readOnly={true}
-                />
-              </div>
+            <div className="xl:col-span-2">
+              <Select
+                className="border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
+                options={optionsFilterStatus}
+                isSearchable={false}
+                defaultValue={optionsFilterStatus[0]}
+                onChange={filterStatusData}
+              />
             </div>
+            <button
+              type="button"
+              className="text-red-500 bg-white btn hover:text-red-500 hover:bg-red-100 focus:text-red-500 focus:bg-red-100 active:text-red-500 active:bg-red-100 dark:bg-zink-700 dark:hover:bg-red-500/10 dark:focus:bg-red-500/10 dark:active:bg-red-500/10"
+              onClick={resetFilters}
+            >
+              Xóa lọc
+              <i className="align-baseline ltr:pl-1 rtl:pr-1 ri-close-line"></i>
+            </button>
+            {/* <div className="xl:col-span-2"> */}
+            {/*   <div> */}
+            {/*     <Flatpickr */}
+            {/*       className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200" */}
+            {/*       options={{ */}
+            {/*         dateFormat: "d M, Y", */}
+            {/*         mode: "range", */}
+            {/*       }} */}
+            {/*       placeholder="Chọn ngày" */}
+            {/*       readOnly={true} */}
+            {/*     /> */}
+            {/*   </div> */}
+            {/* </div> */}
             <div className="lg:col-span-3 ltr:lg:text-right rtl:lg:text-left xl:col-span-3 xl:col-start-10">
               <div className="flex gap-2 xl:justify-end">
                 <input

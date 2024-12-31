@@ -10,7 +10,17 @@ import UserManagement from "pages/Dashboards/User/UserManagement";
 
 // product
 import ProductList from "pages/Dashboards/Product/ProductList";
-import ProductCreate from "pages/Dashboards/Product/ProductCreate";
+
+// receipt import
+import ReceiptImportCreate from "pages/Dashboards/Product/ReceiptImport/ReceiptImportCreate";
+import ReceiptImportUpdate from "pages/Dashboards/Product/ReceiptImport/ReceiptImportUpdate";
+import ReceiptImportList from "pages/Dashboards/Product/ReceiptImport/ReceiptImportList";
+
+
+// receipt return
+import ReceiptReturnCreate from "pages/Dashboards/Product/ReceiptReturn/ReceiptReturnCreate";
+import ReceiptReturnUpdate from "pages/Dashboards/Product/ReceiptReturn/ReceiptReturnUpdate";
+import ReceiptReturnList from "pages/Dashboards/Product/ReceiptReturn/ReceiptReturnList";
 
 interface RouteObject {
   path: string;
@@ -23,8 +33,19 @@ const authProtectedRoutes: Array<RouteObject> = [
   { path: "/", component: Ecommerce },
   { path: "/dashboard", component: Ecommerce },
   { path: "/users", component: UserManagement },
+
+  // product
   { path: "/products", component: ProductList },
-  { path: "/products/create", component: ProductCreate },
+
+  // receipt import
+  { path: "/receipt-import/create", component: ReceiptImportCreate },
+  { path: "/receipt-import/update", component: ReceiptImportUpdate },
+  { path: "/receipt-import/list", component: ReceiptImportList },
+
+  // receipt return
+  { path: "/receipt-return/create", component: ReceiptReturnCreate },
+  { path: "/receipt-return/update", component: ReceiptReturnUpdate },
+  { path: "/receipt-return/list", component: ReceiptReturnList },
 
   // profile
   { path: "/user-profile", component: UserProfile },

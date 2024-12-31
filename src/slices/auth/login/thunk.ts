@@ -15,7 +15,7 @@ interface User {
 export const loginUser =
   (
     user: User,
-    history: any,
+    history: any
   ): ThunkAction<void, RootState, unknown, Action<string>> =>
   async (dispatch: Dispatch) => {
     try {
@@ -23,6 +23,7 @@ export const loginUser =
         username: user.email,
         password: user.password,
       });
+
       if (response.statusCode !== 200) {
         return toast.error(response.message);
       }

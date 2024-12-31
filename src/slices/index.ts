@@ -15,8 +15,12 @@ import ProfileReducer from "./auth/profile/reducer";
 // User Management Reducer
 import UserReducer from "./users/reducer";
 
-// User Management Reducer
+// Product Management Reducer
 import ProductReducer from "./products/reducer";
+
+// Receipt Management Reducer
+import ReceiptImportReducer from "./receipt-import/reducer";
+import ReceiptReturnReducer from "./receipt-return/reducer";
 
 const rootReducer = combineReducers({
   Layout: LayoutReducer,
@@ -25,6 +29,8 @@ const rootReducer = combineReducers({
   Profile: ProfileReducer,
   Users: UserReducer,
   Products: ProductReducer,
+  ReceiptImport: ReceiptImportReducer,
+  ReceiptReturn: ReceiptReturnReducer,
 });
 
 export type RootState = ReturnType<typeof rootReducer>;

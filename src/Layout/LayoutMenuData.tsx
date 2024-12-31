@@ -23,12 +23,6 @@ const menuData: any = [
         link: "/users",
         parentId: "auth-dashboard",
       },
-      {
-        id: "role-auth-dashboard",
-        label: "Chức vụ",
-        link: "/roles",
-        parentId: "auth-dashboard",
-      },
     ],
   },
   {
@@ -41,23 +35,57 @@ const menuData: any = [
     link: "/#",
     icon: <PictureInPicture2 />,
     subItems: [
-      // {
-      //   id: "create-product-page",
-      //   label: "Tạo mới",
-      //   link: "/products/create",
-      //   parentId: "product-dashboard",
-      // },
       {
         id: "products-page",
         label: "Hàng hóa",
         link: "/products",
         parentId: "product-dashboard",
       },
+      // {
+      //   id: "inventory-page",
+      //   label: "Kho, hàng tồn",
+      //   link: "/inventory",
+      //   parentId: "product-dashboard",
+      // },
       {
-        id: "inventory-page",
-        label: "Kho, hàng tồn",
-        link: "/inventory",
+        id: "import-product-page",
+        label: "Nhập hàng",
+        link: "/#",
         parentId: "product-dashboard",
+        subItems: [
+          {
+            id: "create-receipt-import-page",
+            label: "Tạo phiếu nhập",
+            link: "/receipt-import/create",
+            parentId: "product-dashboard",
+          },
+          {
+            id: "list-receipt-import-page",
+            label: "Danh sách phiếu nhập",
+            link: "/receipt-import/list",
+            parentId: "product-dashboard",
+          },
+        ],
+      },
+      {
+        id: "return-product-page",
+        label: "Trả hàng",
+        link: "/#",
+        parentId: "product-dashboard",
+        subItems: [
+          {
+            id: "create-receipt-return-page",
+            label: "Tạo phiếu trả",
+            link: "/receipt-return/create",
+            parentId: "product-dashboard",
+          },
+          {
+            id: "list-receipt-return-page",
+            label: "Danh sách phiếu trả",
+            link: "/receipt-return/list",
+            parentId: "product-dashboard",
+          },
+        ],
       },
     ],
   },

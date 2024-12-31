@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import Modal from "Common/Components/Modal";
 import { Loader2 } from "lucide-react";
+import { useReactToPrint } from "react-to-print";
 import Barcode from "react-barcode";
 
 interface props {
@@ -10,7 +11,9 @@ interface props {
 }
 
 const ShowBarcodeModal: React.FC<props> = ({ show, barcode, onClose }) => {
-  const [isButtonLoading, setButtonLoading] = useState(false);
+  const [isButtonLoading] = useState(false);
+  const barcodeRef = React.useRef(null);
+  const handlePrint = useReactToPrint({ contentRef: barcodeRef });
 
   return (
     <React.Fragment>
@@ -29,7 +32,10 @@ const ShowBarcodeModal: React.FC<props> = ({ show, barcode, onClose }) => {
           <Modal.Title className="text-16">Tem mã hàng hóa</Modal.Title>
         </Modal.Header>
         <Modal.Body className="max-h-[calc(theme('height.screen')_-_180px)] p-4 overflow-y-auto">
-          <div className="flex flex-col items-center justify-center">
+          <div
+            className="flex flex-col items-center justify-center"
+            ref={barcodeRef}
+          >
             <Barcode
               value={barcode} // Giá trị cần mã hóa
               format="CODE128" // Định dạng barcode, ví dụ: "CODE128", "UPC", "EAN"
@@ -43,6 +49,7 @@ const ShowBarcodeModal: React.FC<props> = ({ show, barcode, onClose }) => {
           <button
             type="button"
             className="mr-2 flex items-center text-white btn bg-custom-500 border-custom-500 hover:text-white hover:bg-custom-600 hover:border-custom-600 focus:text-white focus:bg-custom-600 focus:border-custom-600 focus:ring focus:ring-custom-100 active:text-white active:bg-custom-600 active:border-custom-600 active:ring active:ring-custom-100 dark:ring-custom-400/20"
+            onClick={() => handlePrint()}
           >
             {isButtonLoading ? (
               <Loader2 className="size-4 ltr:mr-2 rtl:ml-2 animate-spin" />

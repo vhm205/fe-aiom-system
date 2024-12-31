@@ -30,7 +30,7 @@ export const getProductList = createAsyncThunk(
       toast.error(error.message, { autoClose: 2000 });
       return null;
     }
-  },
+  }
 );
 
 export const addProductList = createAsyncThunk(
@@ -52,7 +52,7 @@ export const addProductList = createAsyncThunk(
       toast.error(error.message, { autoClose: 2000 });
       return null;
     }
-  },
+  }
 );
 
 export const updateProductList = createAsyncThunk(
@@ -61,7 +61,7 @@ export const updateProductList = createAsyncThunk(
     try {
       const response: IHttpResponse = await request.put(
         `/products/${event.id}`,
-        event,
+        event
       );
 
       if (
@@ -80,7 +80,7 @@ export const updateProductList = createAsyncThunk(
       toast.error(error.message, { autoClose: 2000 });
       return null;
     }
-  },
+  }
 );
 
 export const deleteProductList = createAsyncThunk(
@@ -88,7 +88,7 @@ export const deleteProductList = createAsyncThunk(
   async (event: any) => {
     try {
       const response: IHttpResponse = await request.delete(
-        `/products/${event}`,
+        `/products/${event}`
       );
 
       if (
@@ -104,14 +104,14 @@ export const deleteProductList = createAsyncThunk(
       toast.error(error.message, { autoClose: 2000 });
       return null;
     }
-  },
+  }
 );
 
 export const getCategories = createAsyncThunk(
   `${TYPE_PREFIX}/getCategories`,
   async () => {
     try {
-      const response: IHttpResponse = await request.get("/products/categories");
+      const response: IHttpResponse = await request.get("/categories");
 
       if (!response.success) {
         return [];
@@ -124,14 +124,14 @@ export const getCategories = createAsyncThunk(
       toast.error(error.message, { autoClose: 2000 });
       return null;
     }
-  },
+  }
 );
 
 export const getSuppliers = createAsyncThunk(
   `${TYPE_PREFIX}/getSuppliers`,
   async () => {
     try {
-      const response: IHttpResponse = await request.get("/products/suppliers");
+      const response: IHttpResponse = await request.get("/suppliers");
 
       if (!response.success) {
         return [];
@@ -144,14 +144,14 @@ export const getSuppliers = createAsyncThunk(
       toast.error(error.message, { autoClose: 2000 });
       return null;
     }
-  },
+  }
 );
 
 export const getUnits = createAsyncThunk(
   `${TYPE_PREFIX}/getUnits`,
   async () => {
     try {
-      const response: IHttpResponse = await request.get("/products/units");
+      const response: IHttpResponse = await request.get("/units");
 
       if (!response.success) {
         return [];
@@ -164,5 +164,5 @@ export const getUnits = createAsyncThunk(
       toast.error(error.message, { autoClose: 2000 });
       return null;
     }
-  },
+  }
 );

@@ -41,7 +41,10 @@ const CreateProductModal: FC<props> = memo(
     const [supplier, setSupplier] = useState<Option>();
     const [unit, setUnit] = useState<Option>();
 
-    const [formattedMoney, setFormattedMoney] = useState({
+    const [formattedMoney, setFormattedMoney] = useState<{
+      sellingPrice: string | number;
+      costPrice: string | number;
+    }>({
       sellingPrice: 0,
       costPrice: 0,
     });
@@ -54,7 +57,7 @@ const CreateProductModal: FC<props> = memo(
         categoryList: state.categoryList || [],
         supplierList: state.supplierList || [],
         unitList: state.unitList || [],
-      }),
+      })
     );
 
     const { categoryList, supplierList, unitList } =
@@ -84,6 +87,14 @@ const CreateProductModal: FC<props> = memo(
           label: defaultData.unit,
           value: defaultData.unit,
         });
+        setFormattedMoney({
+          sellingPrice: defaultData
+            ? formatMoneyWithVND(+defaultData.sellingPrice)
+            : 0,
+          costPrice: defaultData
+            ? formatMoneyWithVND(+defaultData.costPrice)
+            : 0,
+        });
       } else {
         setCategory(undefined);
         setSupplier(undefined);
@@ -109,8 +120,21 @@ const CreateProductModal: FC<props> = memo(
       }
 
       setButtonLoading(false);
+
       handleClose();
+      resetForm();
       onDone?.();
+    };
+
+    const resetForm = () => {
+      validation.resetForm();
+      setFormattedMoney({
+        sellingPrice: 0,
+        costPrice: 0,
+      });
+      setCategory(undefined);
+      setSupplier(undefined);
+      setUnit(undefined);
     };
 
     const validation: any = useFormik({
@@ -320,11 +344,11 @@ const CreateProductModal: FC<props> = memo(
                             onChange={(newValue: any) => {
                               validation.setFieldValue(
                                 "category",
-                                newValue.value,
+                                newValue.value
                               );
                               setCategory(newValue);
                             }}
-                            value={category}
+                            value={category || ""}
                             options={categoryList.map((category: string) => ({
                               label: category,
                               value: category,
@@ -355,11 +379,11 @@ const CreateProductModal: FC<props> = memo(
                             onChange={(newValue: any) => {
                               validation.setFieldValue(
                                 "supplier",
-                                newValue.value,
+                                newValue.value
                               );
                               setSupplier(newValue);
                             }}
-                            value={supplier}
+                            value={supplier || ""}
                             options={supplierList.map((supplier: string) => ({
                               label: supplier,
                               value: supplier,
@@ -391,7 +415,7 @@ const CreateProductModal: FC<props> = memo(
                               validation.setFieldValue("unit", newValue.value);
                               setUnit(newValue);
                             }}
-                            value={unit}
+                            value={unit || ""}
                             options={unitList.map((unit: string) => ({
                               label: unit,
                               value: unit,
@@ -513,7 +537,7 @@ const CreateProductModal: FC<props> = memo(
         </Modal>
       </React.Fragment>
     );
-  },
+  }
 );
 
 export default CreateProductModal;
