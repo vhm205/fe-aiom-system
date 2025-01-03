@@ -138,7 +138,7 @@ const UpdateReceiptImport = (props: any) => {
 
     try {
       const response: IHttpResponse = await request.put(
-        `/receipt-import/${receiptId}`,
+        `/receipt-imports/${receiptId}`,
         payload
       );
 
