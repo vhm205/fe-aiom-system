@@ -1,10 +1,10 @@
 import { BaseOptions } from "flatpickr/dist/types/options";
 import { getDate } from "helpers/date";
 import { FC } from "react";
-import Flatpickr from "react-flatpickr";
+import Flatpickr, { DateTimePickerProps } from "react-flatpickr";
 
 type Props = {
-  props?: any;
+  props?: DateTimePickerProps;
   options?: Partial<BaseOptions>;
   value?: string | Date;
   onChange: (value: Date[]) => void;

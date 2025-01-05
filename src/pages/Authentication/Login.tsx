@@ -1,5 +1,4 @@
 import React from "react";
-// import { Facebook, Github, Mail, Twitter } from "lucide-react";
 
 // Formik validation
 import * as Yup from "yup";
@@ -10,7 +9,7 @@ import { useFormik as useFormic } from "formik";
 // import logoDark from "assets/images/logo-dark.png";
 import logoDark from "assets/images/logo/logo5.png";
 import logoLight from "assets/images/logo/logo6.png";
-import { loginUser, socialLogin } from "slices/thunk";
+import { loginUser } from "slices/thunk";
 import { useDispatch, useSelector } from "react-redux";
 import withRouter from "Common/withRouter";
 import { createSelector } from "reselect";
@@ -19,7 +18,6 @@ import { Link } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 
 const Login = (props: any) => {
-  document.title = "Login | Tailwick - React Admin & Dashboard Template";
 
   const dispatch = useDispatch<any>();
 
@@ -36,7 +34,6 @@ const Login = (props: any) => {
   const { user, success, error } = useSelector(selectLogin);
 
   const validation: any = useFormic({
-    // enableReinitialize : use this flag when initial values needs to be changed
     enableReinitialize: true,
 
     initialValues: {
@@ -52,15 +49,9 @@ const Login = (props: any) => {
     },
   });
 
-  // const signIn = (type: any) => {
-  //   dispatch(socialLogin(type, props.router.navigate));
-  // };
-
-  // const socialResponse = (type: any) => {
-  //   signIn(type);
-  // };
-
   React.useEffect(() => {
+    document.title = "Login | Tailwick - React Admin & Dashboard Template";
+
     const bodyElement = document.body;
 
     bodyElement.classList.add(
@@ -136,7 +127,7 @@ const Login = (props: any) => {
                   className="px-4 py-3 mb-3 text-sm text-green-500 border border-green-200 rounded-md bg-green-50 dark:bg-green-400/20 dark:border-green-500/50"
                   id="successAlert"
                 >
-                  You have <b>successfully</b> signed in.
+                  Đăng nhập thành công
                 </div>
               )}
               {error && (
@@ -144,7 +135,8 @@ const Login = (props: any) => {
                   className="px-4 py-3 mb-3 text-sm text-red-500 border border-red-200 rounded-md bg-red-50 dark:bg-red-400/20 dark:border-red-500/50"
                   id="successAlert"
                 >
-                  You have <b>failed</b> signed in.
+                  {error}
+                  {/* You have <b>failed</b> signed in. */}
                 </div>
               )}
               <div className="mb-3">

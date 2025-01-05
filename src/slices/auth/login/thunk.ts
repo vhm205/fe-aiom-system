@@ -1,5 +1,4 @@
 import { loginError, loginSuccess, logoutSuccess } from "./reducer";
-import { toast } from "react-toastify";
 import { ThunkAction } from "redux-thunk";
 import { Action, Dispatch } from "redux";
 import { RootState } from "slices";
@@ -25,13 +24,14 @@ export const loginUser =
       });
 
       if (response.statusCode !== 200) {
-        return toast.error(response.message);
+        dispatch(loginError(response.message));
+        return;
       }
 
       localStorage.setItem("jwt", response.data.token);
       localStorage.setItem("authUser", JSON.stringify(response.data.user));
 
-      if (response) {
+      if (response.data) {
         setTimeout(() => {
           dispatch(loginSuccess(response));
           history("/dashboard");
