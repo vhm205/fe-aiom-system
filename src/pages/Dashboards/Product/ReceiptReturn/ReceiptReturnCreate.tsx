@@ -25,6 +25,7 @@ import { Link } from "react-router-dom";
 import { TimePicker } from "Common/Components/TimePIcker";
 import withRouter from "Common/withRouter";
 import { getDate } from "helpers/date";
+import AsyncPaginatedSelect from "Common/Components/Select/AsyncPaginatedSelect";
 
 const customerReasons = ["Sản phẩm lỗi", "Đổi sản phẩm", "Lý do khác"];
 
@@ -74,18 +75,13 @@ const CreateReceiptReturn = (props: any) => {
       return;
     }
 
-    let quantity = 0;
-
-    const items = rows.map((row) => {
-      quantity += row.quantity;
-      return {
-        productId: row.id,
-        productCode: row.code,
-        productName: row.name,
-        quantity: row.quantity,
-        costPrice: row.price,
-      };
-    });
+    const items = rows.map((row) => ({
+      productId: row.id,
+      productCode: row.code,
+      productName: row.name,
+      quantity: row.quantity,
+      costPrice: row.price,
+    }));
 
     const payload = {
       name: values.name,
@@ -143,6 +139,39 @@ const CreateReceiptReturn = (props: any) => {
     }),
     onSubmit: handleSubmitForm,
   });
+
+  const handleLoadSupplier = async (inputValue: string, page: number) => {
+    try {
+      const response: IHttpResponse = await request.get(
+        `/suppliers?keyword=${inputValue}&page=${page}&limit=10`
+      );
+
+      if (
+        (response.statusCode && response.statusCode !== 200) ||
+        !response.success
+      ) {
+        throw new Error(response.message);
+      }
+
+      const { data, metadata } = response;
+
+      return {
+        results: data?.map((item: string) => ({
+          value: item,
+          label: item,
+        })),
+        hasMore: metadata?.hasNext,
+        page: metadata?.currentPage,
+      };
+    } catch (error) {
+      toast.error((error as Error).message);
+      return {
+        results: [],
+        hasMore: false,
+        page: 1,
+      };
+    }
+  };
 
   return (
     <React.Fragment>
@@ -262,21 +291,33 @@ const CreateReceiptReturn = (props: any) => {
                       >
                         Nhà cung cấp
                       </label>
-                      <CreatableSelect
-                        className="border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
-                        id="supplierSelect"
-                        name="name"
+
+                      <AsyncPaginatedSelect
+                        loadOptions={handleLoadSupplier}
+                        defaultOptions={supplierList.map(
+                          (supplier: string) => ({
+                            label: supplier,
+                            value: supplier,
+                          })
+                        )}
                         placeholder="Chọn"
-                        isClearable={false}
-                        data-choices-text-unique-true
-                        data-choices
-                        onChange={(newValue: any) => {
-                          validation.setFieldValue("name", newValue.value);
+                        debounceTimeout={500}
+                        noOptionsMessage={() => "Không thấy nhà cung cấp"}
+                        createOption={(value) =>
+                          Promise.resolve({
+                            value,
+                            label: value,
+                          })
+                        }
+                        onChange={(option) => {
+                          if (option) {
+                            validation.setFieldValue("name", option.value);
+                          }
                         }}
-                        options={supplierList.map((supplier: string) => ({
-                          label: supplier,
-                          value: supplier,
-                        }))}
+                        value={{
+                          label: validation.values?.supplier,
+                          value: validation.values?.supplier,
+                        }}
                       />
                       {validation.touched.name && validation.errors.name ? (
                         <p className="text-red-400">{validation.errors.name}</p>

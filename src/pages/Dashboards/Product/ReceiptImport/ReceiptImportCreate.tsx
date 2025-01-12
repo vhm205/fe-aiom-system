@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import BreadCrumb from "Common/BreadCrumb";
-import CreatableSelect from "react-select/creatable";
 import Barcode from "react-barcode";
 import dayjs from "dayjs";
 
@@ -25,7 +24,7 @@ import { request } from "helpers/axios";
 import { Link } from "react-router-dom";
 import { getDate } from "helpers/date";
 import { TimePicker } from "Common/Components/TimePIcker";
-// import AsyncPaginatedSelect from "Common/Components/Select/AsyncPaginatedSelect";
+import AsyncPaginatedSelect from "Common/Components/Select/AsyncPaginatedSelect";
 
 const CreateReceiptImport = (props: any) => {
   const [rows, setRows] = useState<any[]>([
@@ -81,7 +80,7 @@ const CreateReceiptImport = (props: any) => {
       status: values.status,
       expectedImportDate: getDate(values.importDate).format(),
       paymentDate: getDate(values.paymentDate).format(),
-      quantity: values.quantity,
+      quantity,
       supplier: values.supplier,
       warehouseLocation: values.warehouseLocation,
       totalAmount,
@@ -115,7 +114,6 @@ const CreateReceiptImport = (props: any) => {
     enableReinitialize: false,
 
     initialValues: {
-      quantity: "",
       importDate: "",
       paymentDate: "",
       supplier: "",
@@ -123,7 +121,6 @@ const CreateReceiptImport = (props: any) => {
       note: "",
     },
     validationSchema: Yup.object({
-      quantity: Yup.string().required("Vui lòng nhập số lượng"),
       importDate: Yup.string().required("Vui lòng chọn ngày nhập hàng"),
       paymentDate: Yup.string().required("Vui lòng chọn ngày thanh toán"),
       supplier: Yup.string().required("Vui lòng chọn nhà cung cấp"),
@@ -134,7 +131,9 @@ const CreateReceiptImport = (props: any) => {
 
   const handleLoadSupplier = async (inputValue: string, page: number) => {
     try {
-      const response: IHttpResponse = await request.get(`/suppliers?keyword=${inputValue}&page=${page}&limit=10`);
+      const response: IHttpResponse = await request.get(
+        `/suppliers?keyword=${inputValue}&page=${page}&limit=10`
+      );
 
       if (
         (response.statusCode && response.statusCode !== 200) ||
@@ -222,27 +221,31 @@ const CreateReceiptImport = (props: any) => {
                     />
                   </div>
 
-                  {/* Số lượng */}
                   <div className="xl:col-span-4">
                     <label
-                      htmlFor="qualityInput"
+                      htmlFor="warehouseLocationSelect"
                       className="inline-block mb-2 text-base font-medium"
                     >
-                      Số lượng
+                      Cửa hàng
                     </label>
-                    <input
-                      type="number"
-                      id="qualityInput"
+                    <select
                       className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
-                      placeholder="Nhập số lượng"
-                      name="quantity"
+                      data-choices
+                      data-choices-search-false
+                      name="warehouseLocation"
+                      id="warehouseLocationSelect"
                       onChange={validation.handleChange}
-                      value={validation.values.quantity || ""}
-                    />
-                    {validation.touched.quantity &&
-                    validation.errors.quantity ? (
+                      value={validation.values.warehouseLocation || ""}
+                    >
+                      <option value="">Chọn kho</option>
+                      <option value="Kho KS1">Kho KS1</option>
+                      <option value="Kho KS2">Kho KS2</option>
+                      <option value="Kho KH">Kho KH</option>
+                    </select>
+                    {validation.touched.warehouseLocation &&
+                    validation.errors.warehouseLocation ? (
                       <p className="text-red-400">
-                        {validation.errors.quantity}
+                        {validation.errors.warehouseLocation}
                       </p>
                     ) : null}
                   </div>
@@ -325,76 +328,35 @@ const CreateReceiptImport = (props: any) => {
                     >
                       Nhà cung cấp
                     </label>
-                    {/* <AsyncPaginatedSelect
+                    <AsyncPaginatedSelect
                       loadOptions={handleLoadSupplier}
+                      defaultOptions={supplierList.map((supplier: string) => ({
+                        label: supplier,
+                        value: supplier,
+                      }))}
                       placeholder="Chọn"
                       debounceTimeout={500}
                       noOptionsMessage={() => "Không thấy nhà cung cấp"}
-                      createOption={value => Promise.resolve({
-                        value,
-                        label: value
-                      })}
-                      onChange={(option, action) => {
-                        console.log({ option, action })
-
-                        if(option) {
+                      createOption={(value) =>
+                        Promise.resolve({
+                          value,
+                          label: value,
+                        })
+                      }
+                      onChange={(option) => {
+                        if (option) {
                           validation.setFieldValue("supplier", option.value);
                         }
                       }}
                       value={{
                         label: validation.values?.supplier,
-                        value: validation.values?.supplier
+                        value: validation.values?.supplier,
                       }}
-                    /> */}
-                    <CreatableSelect
-                      className="border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
-                      id="supplierSelect"
-                      name="supplier"
-                      placeholder="Chọn"
-                      isClearable={false}
-                      data-choices-text-unique-true
-                      data-choices
-                      onChange={(newValue: any) => {
-                        validation.setFieldValue("supplier", newValue.value);
-                      }}
-                      options={supplierList.map((supplier: string) => ({
-                        label: supplier,
-                        value: supplier,
-                      }))}
                     />
                     {validation.touched.supplier &&
                     validation.errors.supplier ? (
                       <p className="text-red-400">
                         {validation.errors.supplier}
-                      </p>
-                    ) : null}
-                  </div>
-
-                  <div className="xl:col-span-4">
-                    <label
-                      htmlFor="warehouseLocationSelect"
-                      className="inline-block mb-2 text-base font-medium"
-                    >
-                      Cửa hàng
-                    </label>
-                    <select
-                      className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
-                      data-choices
-                      data-choices-search-false
-                      name="warehouseLocation"
-                      id="warehouseLocationSelect"
-                      onChange={validation.handleChange}
-                      value={validation.values.warehouseLocation || ""}
-                    >
-                      <option value="">Chọn kho</option>
-                      <option value="Kho KS1">Kho KS1</option>
-                      <option value="Kho KS2">Kho KS2</option>
-                      <option value="Kho KH">Kho KH</option>
-                    </select>
-                    {validation.touched.warehouseLocation &&
-                    validation.errors.warehouseLocation ? (
-                      <p className="text-red-400">
-                        {validation.errors.warehouseLocation}
                       </p>
                     ) : null}
                   </div>

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import AsyncCreatableSelect from "react-select/async-creatable";
 import {
   ActionMeta,
@@ -48,13 +48,17 @@ const AsyncPaginatedSelect: React.FC<AsyncPaginatedSelectProps> = ({
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [options, setOptions] =
-    useState<OptionsOrGroups<Option, GroupBase<Option>>>(defaultOptions);
+    useState<OptionsOrGroups<Option, GroupBase<Option>>>([]);
   const [hasMore, setHasMore] = useState(true);
+
+  useEffect(() => {
+    if (defaultOptions.length > 0 && !options.length) {
+      setOptions(defaultOptions);
+    }
+  }, [defaultOptions, options]);
 
   const loadData = useCallback(
     async (inputValue: string, page: number) => {
-      console.log({ inputValue, page });
-
       setIsLoading(true);
       try {
         const response = await loadOptions(inputValue, page);
@@ -85,7 +89,9 @@ const AsyncPaginatedSelect: React.FC<AsyncPaginatedSelectProps> = ({
 
   const handleMenuScrollToBottom = () => {
     if (hasMore && !isLoading) {
-      setPage((prevPage) => prevPage + 1);
+      const nextPage = page + 1;
+      setPage(nextPage);
+      loadData(search, nextPage);
     }
   };
 
@@ -141,32 +147,3 @@ const AsyncPaginatedSelect: React.FC<AsyncPaginatedSelectProps> = ({
 };
 
 export default AsyncPaginatedSelect;
-
-// import { FC } from "react";
-
-// import AsyncSelect from "react-select/async";
-
-// type Props = {
-//   onChange: (newValue: any) => void;
-//   loadOptions: (inputValue: string) => Promise<any>;
-// };
-
-// export const SelectAsync: FC<Props> = ({ loadOptions, onChange }) => {
-//   return (
-//     <>
-//       <AsyncSelect
-//         className="border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
-//         placeholder="Chọn"
-//         // id="supplierSelect"
-//         // name="supplier"
-//         // isClearable={false}
-//         // data-choices-text-unique-true
-//         // data-choices
-//         cacheOptions
-//         defaultOptions
-//         loadOptions={loadOptions}
-//         onChange={onChange}
-//       />
-//     </>
-//   );
-// };

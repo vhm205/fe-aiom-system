@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import BreadCrumb from "Common/BreadCrumb";
-import CreatableSelect from "react-select/creatable";
 import Barcode from "react-barcode";
 
 // Formik
@@ -24,9 +23,10 @@ import {
 import { toast, ToastContainer } from "react-toastify";
 import { IHttpResponse } from "types";
 import { request } from "helpers/axios";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { TimePicker } from "Common/Components/TimePIcker";
 import { getDate } from "helpers/date";
+import AsyncPaginatedSelect from "Common/Components/Select/AsyncPaginatedSelect";
 
 interface Option {
   readonly label: string;
@@ -88,24 +88,60 @@ const UpdateReceiptReturn = (props: any) => {
   const [selectedReason, setSelectedReason] = useState("");
   const [customReason, setCustomReason] = useState("");
 
+  const handleLoadSupplier = async (inputValue: string, page: number) => {
+    try {
+      const response: IHttpResponse = await request.get(
+        `/suppliers?keyword=${inputValue}&page=${page}&limit=10`
+      );
+
+      if (
+        (response.statusCode && response.statusCode !== 200) ||
+        !response.success
+      ) {
+        throw new Error(response.message);
+      }
+
+      const { data, metadata } = response;
+
+      return {
+        results: data?.map((item: string) => ({
+          value: item,
+          label: item,
+        })),
+        hasMore: metadata?.hasNext,
+        page: metadata?.currentPage,
+      };
+    } catch (error) {
+      toast.error((error as Error).message);
+      return {
+        results: [],
+        hasMore: false,
+        page: 1,
+      };
+    }
+  };
+
+  const totalAmount = useMemo(() => {
+    return rows.reduce((total, row) => total + row.quantity * row.price, 0);
+  }, [rows]);
+
+  const quantity = useMemo(() => {
+    return rows.reduce((total, row) => total + row.quantity, 0);
+  }, [rows]);
+
   const handleSubmitForm = async (values: any) => {
     if (!rows.length) {
       toast.warn("Vui lòng chọn sản phẩm");
       return;
     }
 
-    let quantity = 0;
-
-    const items = rows.map((row) => {
-      quantity += row.quantity;
-      return {
-        productId: row.id,
-        productCode: row.code,
-        productName: row.name,
-        quantity: row.quantity,
-        costPrice: row.price,
-      };
-    });
+    const items = rows.map((row) => ({
+      productId: row.id,
+      productCode: row.code,
+      productName: row.name,
+      quantity: row.quantity,
+      costPrice: row.price,
+    }));
 
     const payload = {
       name: values.name,
@@ -147,7 +183,6 @@ const UpdateReceiptReturn = (props: any) => {
     enableReinitialize: true,
 
     initialValues: {
-      quantity: receiptInfo.quantity || "",
       returnDate: receiptInfo.returnDate
         ? getDate(receiptInfo.returnDate).toDate()
         : "",
@@ -187,6 +222,7 @@ const UpdateReceiptReturn = (props: any) => {
       quantity: item.quantity,
       price: item.costPrice,
     }));
+
     setRows(items);
   }, [receiptItems]);
 
@@ -215,18 +251,13 @@ const UpdateReceiptReturn = (props: any) => {
     }
   };
 
-  const totalAmount = useMemo(() => {
-    return rows.reduce((total, row) => total + row.quantity * row.price, 0);
-  }, [rows]);
-
-  const quantity = useMemo(() => {
-    return rows.reduce((total, row) => total + row.quantity, 0);
-  }, [rows]);
-
   useEffect(() => {
     dispatch(onGetReceiptReturnInfo(receiptId));
   }, [dispatch, receiptId]);
-  console.log({ reasons, receiptInfo, selectedReason });
+
+  if (!receiptId) {
+    return <Navigate to="/receipt-return/list" />;
+  }
 
   return (
     <React.Fragment>
@@ -348,7 +379,34 @@ const UpdateReceiptReturn = (props: any) => {
                       >
                         Nhà cung cấp
                       </label>
-                      <CreatableSelect
+                      <AsyncPaginatedSelect
+                        loadOptions={handleLoadSupplier}
+                        defaultOptions={supplierList.map(
+                          (supplier: string) => ({
+                            label: supplier,
+                            value: supplier,
+                          })
+                        )}
+                        placeholder="Chọn"
+                        debounceTimeout={500}
+                        noOptionsMessage={() => "Không thấy nhà cung cấp"}
+                        createOption={(value) =>
+                          Promise.resolve({
+                            value,
+                            label: value,
+                          })
+                        }
+                        onChange={(option) => {
+                          if (option) {
+                            validation.setFieldValue("name", option.value);
+                          }
+                        }}
+                        value={{
+                          label: validation.values?.name,
+                          value: validation.values?.name,
+                        }}
+                      />
+                      {/* <CreatableSelect
                         className="border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
                         id="supplierSelect"
                         name="name"
@@ -365,7 +423,7 @@ const UpdateReceiptReturn = (props: any) => {
                           label: supplier,
                           value: supplier,
                         }))}
-                      />
+                      /> */}
                       {validation.touched.name && validation.errors.name ? (
                         <p className="text-red-400">{validation.errors.name}</p>
                       ) : null}
@@ -409,6 +467,7 @@ const UpdateReceiptReturn = (props: any) => {
                       id="statusSelect"
                       onChange={validation.handleChange}
                       value={validation.values.status || ""}
+                      disabled={validation.values.status === "completed"}
                     >
                       {receiptReturnStatus.map((status) => (
                         <option key={status.value} value={status.value}>

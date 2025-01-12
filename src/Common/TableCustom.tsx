@@ -316,24 +316,22 @@ const TableCustom = ({
           </div>
           <ul className="flex flex-wrap items-center gap-2 shrink-0">
             <li>
-              <Link
-                to="#!"
+              <button
                 className={`inline-flex items-center justify-center bg-white dark:bg-zink-700 h-8 px-3 transition-all duration-150 ease-linear border rounded border-slate-200 dark:border-zink-500 text-slate-500 dark:text-zink-200 hover:text-custom-500 dark:hover:text-custom-500 hover:bg-custom-50 dark:hover:bg-custom-500/10 focus:bg-custom-50 dark:focus:bg-custom-500/10 focus:text-custom-500 dark:focus:text-custom-500 [&.active]:text-custom-500 dark:[&.active]:text-custom-500 [&.active]:bg-custom-50 dark:[&.active]:bg-custom-500/10 [&.active]:border-custom-50 dark:[&.active]:border-custom-500/10 [&.active]:hover:text-custom-700 dark:[&.active]:hover:text-custom-700 [&.disabled]:text-slate-400 dark:[&.disabled]:text-zink-300 [&.disabled]:cursor-auto ${!getCanPreviousPage() && "disabled"}`}
                 onClick={firstPage}
               >
                 <ChevronLeft className="size-4 mr-1 rtl:rotate-180"></ChevronLeft>{" "}
-                First
-              </Link>
+                Trang đầu
+              </button>
             </li>
             <li>
-              <Link
-                to="#!"
+              <button
                 className={`inline-flex items-center justify-center bg-white dark:bg-zink-700 h-8 px-3 transition-all duration-150 ease-linear border rounded border-slate-200 dark:border-zink-500 text-slate-500 dark:text-zink-200 hover:text-custom-500 dark:hover:text-custom-500 hover:bg-custom-50 dark:hover:bg-custom-500/10 focus:bg-custom-50 dark:focus:bg-custom-500/10 focus:text-custom-500 dark:focus:text-custom-500 [&.active]:text-custom-500 dark:[&.active]:text-custom-500 [&.active]:bg-custom-50 dark:[&.active]:bg-custom-500/10 [&.active]:border-custom-50 dark:[&.active]:border-custom-500/10 [&.active]:hover:text-custom-700 dark:[&.active]:hover:text-custom-700 [&.disabled]:text-slate-400 dark:[&.disabled]:text-zink-300 [&.disabled]:cursor-auto ${!getCanPreviousPage() && "disabled"}`}
                 onClick={() => getCanPreviousPage() && previousPage()}
               >
                 <ChevronLeft className="size-4 mr-1 rtl:rotate-180"></ChevronLeft>{" "}
-                Prev
-              </Link>
+                Trang trước
+              </button>
             </li>
             {/* {getPageOptions().map((item: any, key: number) => ( */}
             {/*   <React.Fragment key={key}> */}
@@ -348,26 +346,24 @@ const TableCustom = ({
             {/*   </React.Fragment> */}
             {/* ))} */}
             <li>
-              <Link
-                to="#!"
+              <button
                 className={`inline-flex items-center justify-center bg-white dark:bg-zink-700 h-8 px-3 transition-all duration-150 ease-linear border rounded border-slate-200 dark:border-zink-500 text-slate-500 dark:text-zink-200 hover:text-custom-500 dark:hover:text-custom-500 hover:bg-custom-50 dark:hover:bg-custom-500/10 focus:bg-custom-50 dark:focus:bg-custom-500/10 focus:text-custom-500 dark:focus:text-custom-500 [&.active]:text-custom-500 dark:[&.active]:text-custom-500 [&.active]:bg-custom-50 dark:[&.active]:bg-custom-500/10 [&.active]:border-custom-50 dark:[&.active]:border-custom-500/10 [&.active]:hover:text-custom-700 dark:[&.active]:hover:text-custom-700 [&.disabled]:text-slate-400 dark:[&.disabled]:text-zink-300 [&.disabled]:cursor-auto
                 ${!getCanNextPage() && "disabled"}`}
                 onClick={() => getCanNextPage() && nextPage()}
               >
-                Next{" "}
+                Trang sau{" "}
                 <ChevronRight className="size-4 ml-1 rtl:rotate-180"></ChevronRight>{" "}
-              </Link>
+              </button>
             </li>
             <li>
-              <Link
-                to="#!"
+              <button
                 className={`inline-flex items-center justify-center bg-white dark:bg-zink-700 h-8 px-3 transition-all duration-150 ease-linear border rounded border-slate-200 dark:border-zink-500 text-slate-500 dark:text-zink-200 hover:text-custom-500 dark:hover:text-custom-500 hover:bg-custom-50 dark:hover:bg-custom-500/10 focus:bg-custom-50 dark:focus:bg-custom-500/10 focus:text-custom-500 dark:focus:text-custom-500 [&.active]:text-custom-500 dark:[&.active]:text-custom-500 [&.active]:bg-custom-50 dark:[&.active]:bg-custom-500/10 [&.active]:border-custom-50 dark:[&.active]:border-custom-500/10 [&.active]:hover:text-custom-700 dark:[&.active]:hover:text-custom-700 [&.disabled]:text-slate-400 dark:[&.disabled]:text-zink-300 [&.disabled]:cursor-auto
                 ${!getCanNextPage() && "disabled"}`}
                 onClick={lastPage}
               >
-                Last{" "}
+                Trang cuối{" "}
                 <ChevronRight className="size-4 ml-1 rtl:rotate-180"></ChevronRight>{" "}
-              </Link>
+              </button>
             </li>
           </ul>
         </div>
