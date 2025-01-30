@@ -38,7 +38,7 @@ import {
 
 import ImportProductModal from "./components/ImportProductModal";
 import CreateProductModal from "./components/CreateProductModal";
-import ShowBarcodeModal from "./components/ShowBarcodeModal";
+import PrintBarcodeModal from "./components/PrintBarcodeModal";
 import { formatMoney } from "helpers/utils";
 
 const PRODUCT_STATUS = {
@@ -378,7 +378,7 @@ const ProductList = () => {
         defaultData={eventData}
       />
       {eventData?.productCode && (
-        <ShowBarcodeModal
+        <PrintBarcodeModal
           barcode={eventData.productCode}
           show={showBarcodeModal}
           onClose={showBarcodeModalToggle}
@@ -461,13 +461,6 @@ const ProductList = () => {
                 >
                   <Download className="inline-block size-4" />{" "}
                   <span className="align-middle">Nhập Excel</span>
-                </button>
-                <button
-                  type="button"
-                  className="bg-white border-dashed text-custom-500 btn border-custom-500 hover:text-custom-500 hover:bg-custom-50 hover:border-custom-600 focus:text-custom-600 focus:bg-custom-50 focus:border-custom-600 active:text-custom-600 active:bg-custom-50 active:border-custom-600 dark:bg-zink-700 dark:ring-custom-400/20 dark:hover:bg-custom-800/20 dark:focus:bg-custom-800/20 dark:active:bg-custom-800/20"
-                >
-                  <Download className="inline-block size-4" />{" "}
-                  <span className="align-middle">Xuất Excel</span>
                 </button>
               </div>
             </div>

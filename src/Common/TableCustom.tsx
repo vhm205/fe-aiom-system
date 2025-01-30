@@ -1,5 +1,4 @@
 import React, { Fragment, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 
 import {
   Column,
@@ -32,7 +31,7 @@ const Filter = ({
         type="text"
         value={(columnFilterValue ?? "") as string}
         onChange={(value) => column.setFilterValue(value)}
-        placeholder="Search..."
+        placeholder="Tìm kiếm..."
         className="w-36 border shadow rounded"
         list={column.id + "list"}
       />
@@ -309,9 +308,9 @@ const TableCustom = ({
         <div className={PaginationClassName}>
           <div className="mb-4 grow md:mb-0">
             <div className="text-slate-500 dark:text-zink-200">
-              Showing
-              <b> {getState().pagination.pageSize}</b> of
-              <b> {totalData}</b> Results
+              Hiển trị
+              <b> {getState().pagination.pageSize}</b> kết quả trên tổng
+              <b> {totalData}</b> dữ liệu
             </div>
           </div>
           <ul className="flex flex-wrap items-center gap-2 shrink-0">

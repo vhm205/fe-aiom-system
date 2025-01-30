@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import BreadCrumb from "Common/BreadCrumb";
 import Barcode from "react-barcode";
-import dayjs from "dayjs";
 
 // Formik
 import * as Yup from "yup";
@@ -13,41 +12,84 @@ import { createSelector } from "reselect";
 
 // Icons
 import { Mail, PackageOpen, UserX2, Plus, Trash2 } from "lucide-react";
-import withRouter from "Common/withRouter";
 import ProductListReceiptModal from "../components/ProductListReceiptModal";
 import { Counter } from "Common/Components/Counter";
 import { formatMoney, formatMoneyWithVND } from "helpers/utils";
-import { getSuppliers as onGetSupplierList } from "slices/thunk";
+import withRouter from "Common/withRouter";
+import {
+  getSuppliers as onGetSupplierList,
+  getReceiptImportInfo as onGetReceiptImportInfo,
+} from "slices/thunk";
 import { toast, ToastContainer } from "react-toastify";
 import { IHttpResponse } from "types";
 import { request } from "helpers/axios";
-import { Link } from "react-router-dom";
-import { getDate } from "helpers/date";
+import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { TimePicker } from "Common/Components/TimePIcker";
+import { getDate } from "helpers/date";
 import AsyncPaginatedSelect from "Common/Components/Select/AsyncPaginatedSelect";
 
-const CreateReceiptImport = (props: any) => {
-  const [rows, setRows] = useState<any[]>([
-    // { id: 1, code: "NK0001", name: "Item 1", quantity: 10, price: 100 },
-  ]);
+// interface Option {
+//   readonly label: string;
+//   readonly value?: string;
+//   readonly options?: Option[];
+//   readonly isDisabled?: boolean;
+// }
+
+const UpdateReceiptImport = (props: any) => {
+  const [searchParams] = useSearchParams();
+  const [rows, setRows] = useState<any[]>([]);
+  // const [supplier, setSupplier] = useState<Option>();
 
   const [productListModal, setProductListModal] = useState(false);
   const productListModalToggle = () => setProductListModal(!productListModal);
 
   const dispatch = useDispatch<any>();
 
-  const selectDataList = createSelector(
+  const selectDataProduct = createSelector(
     (state: any) => state.Products,
     (state) => ({
       supplierList: state.supplierList || [],
     })
   );
 
-  const { supplierList } = useSelector(selectDataList);
+  const selectDataReceipt = createSelector(
+    (state: any) => state.ReceiptImport,
+    (state) => ({
+      receiptInfo: state.receiptInfo || {},
+      receiptItems: state.receiptItems || [],
+    })
+  );
+
+  const { supplierList } = useSelector(selectDataProduct);
+  const { receiptInfo, receiptItems } = useSelector(selectDataReceipt);
 
   useEffect(() => {
     dispatch(onGetSupplierList());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (!receiptItems.length) return;
+
+    const items = receiptItems.map((item: any) => ({
+      id: item.id,
+      code: item.productCode,
+      name: item.productName,
+      quantity: item.quantity,
+      price: item.costPrice,
+    }));
+    setRows(items);
+  }, [receiptItems]);
+
+  // useEffect(() => {
+  //   if (!receiptInfo) return;
+
+  //   setSupplier({
+  //     label: receiptInfo.supplier,
+  //     value: receiptInfo.supplier,
+  //   });
+  // }, [receiptInfo]);
+
+  const receiptId = useMemo(() => searchParams.get("id"), [searchParams]);
 
   const totalAmount = useMemo(() => {
     return rows.reduce((total, row) => {
@@ -61,9 +103,13 @@ const CreateReceiptImport = (props: any) => {
     }, 0);
   }, [rows]);
 
+  useEffect(() => {
+    dispatch(onGetReceiptImportInfo(receiptId));
+  }, [dispatch, receiptId]);
+
   const handleSubmitForm = async (values: any) => {
     if (!rows.length) {
-      toast.error("Vui lòng chọn sản phẩm");
+      toast.warn("Vui lòng chọn sản phẩm");
       return;
     }
 
@@ -89,17 +135,17 @@ const CreateReceiptImport = (props: any) => {
     };
 
     try {
-      const response: IHttpResponse = await request.post(
-        `/receipt-imports`,
+      const response: IHttpResponse = await request.put(
+        `/receipt-imports/${receiptId}`,
         payload
       );
 
-      if (response.statusCode !== 201) {
+      if (response.statusCode !== 200) {
         toast.warn(response.message);
         return;
       }
 
-      toast.success("Tạo phiếu nhập thành công");
+      toast.success("Cập nhật phiếu thành công");
 
       setTimeout(() => {
         props.router.navigate("/receipt-import/list");
@@ -111,14 +157,19 @@ const CreateReceiptImport = (props: any) => {
 
   const validation: any = useFormik({
     // enableReinitialize : use this flag when initial values needs to be changed
-    enableReinitialize: false,
+    enableReinitialize: true,
 
     initialValues: {
-      importDate: "",
-      paymentDate: "",
-      supplier: "",
-      warehouseLocation: "",
-      note: "",
+      importDate: receiptInfo.expectedImportDate
+        ? getDate(receiptInfo.expectedImportDate).toDate()
+        : "",
+      paymentDate: receiptInfo.paymentDate
+        ? getDate(receiptInfo.paymentDate).toDate()
+        : "",
+      supplier: receiptInfo.supplier || "",
+      warehouseLocation: receiptInfo.warehouseLocation || "",
+      note: receiptInfo.note || "",
+      status: receiptInfo.status || "",
     },
     validationSchema: Yup.object({
       importDate: Yup.string().required("Vui lòng chọn ngày nhập hàng"),
@@ -162,11 +213,15 @@ const CreateReceiptImport = (props: any) => {
     }
   };
 
+  if (!receiptId) {
+    return <Navigate to="/receipt-import/list" />;
+  }
+
   return (
     <React.Fragment>
       <ProductListReceiptModal
         show={productListModal}
-        isCreateNew={true}
+        selectedItems={rows}
         onCancel={productListModalToggle}
         onDone={(selectedProducts) => {
           if (!selectedProducts.length) return;
@@ -190,7 +245,7 @@ const CreateReceiptImport = (props: any) => {
         }}
       />
       <ToastContainer closeButton={false} limit={1} />
-      <BreadCrumb title="Tạo mới phiếu nhập" pageTitle="Products" />
+      <BreadCrumb title="Cập nhật phiếu nhập" pageTitle="Products" />
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-x-5">
         <div className="xl:col-span-9">
           <div className="card">
@@ -216,37 +271,35 @@ const CreateReceiptImport = (props: any) => {
                       id="productCodeInput"
                       className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
                       placeholder="Mã phiếu"
-                      value={`NH${dayjs().format("YYMMDDHHmm")}`}
+                      value={receiptInfo.receiptNumber}
                       disabled
                     />
                   </div>
 
                   <div className="xl:col-span-4">
                     <label
-                      htmlFor="warehouseLocationSelect"
+                      htmlFor="statusSelect"
                       className="inline-block mb-2 text-base font-medium"
                     >
-                      Cửa hàng
+                      Trạng thái
                     </label>
                     <select
                       className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
                       data-choices
                       data-choices-search-false
-                      name="warehouseLocation"
-                      id="warehouseLocationSelect"
+                      name="status"
+                      id="statusSelect"
                       onChange={validation.handleChange}
-                      value={validation.values.warehouseLocation || ""}
+                      value={validation.values.status || ""}
                     >
-                      <option value="">Chọn kho</option>
-                      <option value="Kho KS1">Kho KS1</option>
-                      <option value="Kho KS2">Kho KS2</option>
-                      <option value="Kho KH">Kho KH</option>
+                      <option value="draft">Nháp</option>
+                      <option value="processing">Đang xử lý</option>
+                      <option value="cancelled">Hủy phiếu</option>
+                      <option value="short_received">Nhận thiếu hàng</option>
+                      <option value="over_received">Nhận dư hàng</option>
                     </select>
-                    {validation.touched.warehouseLocation &&
-                    validation.errors.warehouseLocation ? (
-                      <p className="text-red-400">
-                        {validation.errors.warehouseLocation}
-                      </p>
+                    {validation.touched.status && validation.errors.status ? (
+                      <p className="text-red-400">{validation.errors.status}</p>
                     ) : null}
                   </div>
 
@@ -361,33 +414,34 @@ const CreateReceiptImport = (props: any) => {
                     ) : null}
                   </div>
 
-                  {/* <div className="xl:col-span-4"> */}
-                  {/*   <label */}
-                  {/*     htmlFor="productStatusSelect" */}
-                  {/*     className="inline-block mb-2 text-base font-medium" */}
-                  {/*   > */}
-                  {/*     Trạng thái */}
-                  {/*   </label> */}
-                  {/*   <select */}
-                  {/*     className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200" */}
-                  {/*     data-choices */}
-                  {/*     data-choices-search-false */}
-                  {/*     name="status" */}
-                  {/*     id="productStatusSelect" */}
-                  {/*     onChange={validation.handleChange} */}
-                  {/*     value={validation.values.status || ""} */}
-                  {/*   > */}
-                  {/*     <option value="draft">Nháp</option> */}
-                  {/*     <option value="active">Đang xử lý</option> */}
-                  {/*     <option value="inactive">Hoàn thành</option> */}
-                  {/*     <option value="inactive">Hủy phiếu</option> */}
-                  {/*     <option value="inactive">Nhận thiếu hàng</option> */}
-                  {/*     <option value="inactive">Nhận dư hàng</option> */}
-                  {/*   </select> */}
-                  {/*   {validation.touched.status && validation.errors.status ? ( */}
-                  {/*     <p className="text-red-400">{validation.errors.status}</p> */}
-                  {/*   ) : null} */}
-                  {/* </div> */}
+                  <div className="xl:col-span-4">
+                    <label
+                      htmlFor="warehouseLocationSelect"
+                      className="inline-block mb-2 text-base font-medium"
+                    >
+                      Cửa hàng
+                    </label>
+                    <select
+                      className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
+                      data-choices
+                      data-choices-search-false
+                      name="warehouseLocation"
+                      id="warehouseLocationSelect"
+                      onChange={validation.handleChange}
+                      value={validation.values.warehouseLocation || ""}
+                    >
+                      <option value="">Chọn kho</option>
+                      <option value="Kho KS1">Kho KS1</option>
+                      <option value="Kho KS2">Kho KS2</option>
+                      <option value="Kho KH">Kho KH</option>
+                    </select>
+                    {validation.touched.warehouseLocation &&
+                    validation.errors.warehouseLocation ? (
+                      <p className="text-red-400">
+                        {validation.errors.warehouseLocation}
+                      </p>
+                    ) : null}
+                  </div>
 
                   <div className="lg:col-span-2 xl:col-span-12">
                     <div className="flex justify-start">
@@ -485,18 +539,8 @@ const CreateReceiptImport = (props: any) => {
                   <button
                     type="submit"
                     className="text-white btn bg-custom-500 border-custom-500 hover:text-white hover:bg-custom-600 hover:border-custom-600 focus:text-white focus:bg-custom-600 focus:border-custom-600 focus:ring focus:ring-custom-100 active:text-white active:bg-custom-600 active:border-custom-600 active:ring active:ring-custom-100 dark:ring-custom-400/20"
-                    onClick={(e) =>
-                      validation.setFieldValue("status", "processing")
-                    }
                   >
-                    Tạo phiếu
-                  </button>
-                  <button
-                    type="submit"
-                    className="text-white bg-gray-500 border-gray-500 btn hover:text-white hover:bg-gray-600 hover:border-gray-600 focus:text-white focus:bg-gray-600 focus:border-gray-600 focus:ring focus:ring-gray-100 active:text-white active:bg-gray-600 active:border-gray-600 active:ring active:ring-gray-100 dark:ring-gray-400/10"
-                    onClick={(e) => validation.setFieldValue("status", "draft")}
-                  >
-                    Tạo nháp
+                    Cập nhật
                   </button>
                 </div>
               </form>
@@ -509,13 +553,15 @@ const CreateReceiptImport = (props: any) => {
               <h6 className="mb-4 text-15">Thông tin chung</h6>
 
               <div className="px-5 py-8 flex justify-center rounded-md bg-sky-50 dark:bg-zink-600">
-                <Barcode
-                  value={`NH${dayjs().format("YYMMDDHHmm")}`}
-                  format="CODE128"
-                  width={2}
-                  height={100}
-                  displayValue={true}
-                />
+                {receiptInfo.receiptNumber && (
+                  <Barcode
+                    value={receiptInfo.receiptNumber}
+                    format="CODE128"
+                    width={2}
+                    height={100}
+                    displayValue={true}
+                  />
+                )}
               </div>
 
               <div className="mt-3">
@@ -557,4 +603,4 @@ const CreateReceiptImport = (props: any) => {
   );
 };
 
-export default withRouter(CreateReceiptImport);
+export default withRouter(UpdateReceiptImport);

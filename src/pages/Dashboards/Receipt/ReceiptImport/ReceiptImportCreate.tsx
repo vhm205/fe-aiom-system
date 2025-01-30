@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import BreadCrumb from "Common/BreadCrumb";
-import CreatableSelect from "react-select/creatable";
 import Barcode from "react-barcode";
 import dayjs from "dayjs";
 
@@ -14,6 +13,7 @@ import { createSelector } from "reselect";
 
 // Icons
 import { Mail, PackageOpen, UserX2, Plus, Trash2 } from "lucide-react";
+import withRouter from "Common/withRouter";
 import ProductListReceiptModal from "../components/ProductListReceiptModal";
 import { Counter } from "Common/Components/Counter";
 import { formatMoney, formatMoneyWithVND } from "helpers/utils";
@@ -22,19 +22,14 @@ import { toast, ToastContainer } from "react-toastify";
 import { IHttpResponse } from "types";
 import { request } from "helpers/axios";
 import { Link } from "react-router-dom";
-import { TimePicker } from "Common/Components/TimePIcker";
-import withRouter from "Common/withRouter";
 import { getDate } from "helpers/date";
+import { TimePicker } from "Common/Components/TimePIcker";
 import AsyncPaginatedSelect from "Common/Components/Select/AsyncPaginatedSelect";
 
-const customerReasons = ["Sản phẩm lỗi", "Đổi sản phẩm", "Lý do khác"];
-
-const supplierReasons = ["Ngừng bán", "Lỗi sản xuất", "Lý do khác"];
-
-const CreateReceiptReturn = (props: any) => {
-  const [rows, setRows] = useState<any[]>([]);
-  const [selectedReason, setSelectedReason] = useState(customerReasons[0]);
-  const [customReason, setCustomReason] = useState("");
+const CreateReceiptImport = (props: any) => {
+  const [rows, setRows] = useState<any[]>([
+    // { id: 1, code: "NK0001", name: "Item 1", quantity: 10, price: 100 },
+  ]);
 
   const [productListModal, setProductListModal] = useState(false);
   const productListModalToggle = () => setProductListModal(!productListModal);
@@ -54,24 +49,21 @@ const CreateReceiptReturn = (props: any) => {
     dispatch(onGetSupplierList());
   }, [dispatch]);
 
-  const handleReasonChange = (reason: string) => {
-    setSelectedReason(reason);
-    if (reason !== "Lý do khác") {
-      setCustomReason(""); // Clear custom reason if another option is selected
-    }
-  };
-
   const totalAmount = useMemo(() => {
-    return rows.reduce((total, row) => total + row.quantity * row.price, 0);
+    return rows.reduce((total, row) => {
+      return total + row.quantity * row.price;
+    }, 0);
   }, [rows]);
 
   const quantity = useMemo(() => {
-    return rows.reduce((total, row) => total + row.quantity, 0);
+    return rows.reduce((total, row) => {
+      return total + row.quantity;
+    }, 0);
   }, [rows]);
 
   const handleSubmitForm = async (values: any) => {
     if (!rows.length) {
-      toast.warn("Vui lòng chọn sản phẩm");
+      toast.error("Vui lòng chọn sản phẩm");
       return;
     }
 
@@ -80,26 +72,26 @@ const CreateReceiptReturn = (props: any) => {
       productCode: row.code,
       productName: row.name,
       quantity: row.quantity,
+      inventory: row.inventory,
       costPrice: row.price,
     }));
 
     const payload = {
-      name: values.name,
       note: values.note,
-      reason: customReason || selectedReason,
       status: values.status,
-      type: values.type,
-      returnDate: getDate(values.returnDate).format(),
-      warehouseLocation: values.warehouseLocation,
-      totalProduct: rows.length,
-      totalAmount,
+      expectedImportDate: getDate(values.importDate).format(),
+      paymentDate: getDate(values.paymentDate).format(),
       quantity,
+      supplier: values.supplier,
+      warehouseLocation: values.warehouseLocation,
+      totalAmount,
+      totalProduct: rows.length,
       items,
     };
 
     try {
       const response: IHttpResponse = await request.post(
-        `/receipt-return`,
+        `/receipt-imports`,
         payload
       );
 
@@ -108,10 +100,10 @@ const CreateReceiptReturn = (props: any) => {
         return;
       }
 
-      toast.success("Tạo phiếu trả thành công");
+      toast.success("Tạo phiếu nhập thành công");
 
       setTimeout(() => {
-        props.router.navigate("/receipt-return/list");
+        props.router.navigate("/receipt-import/list");
       }, 700);
     } catch (error: any) {
       toast.error(error.message);
@@ -123,18 +115,16 @@ const CreateReceiptReturn = (props: any) => {
     enableReinitialize: false,
 
     initialValues: {
-      returnDate: "",
-      name: "",
-      note: "",
+      importDate: "",
+      paymentDate: "",
+      supplier: "",
       warehouseLocation: "",
-      reason: customerReasons[0],
-      status: "draft",
-      type: "customer",
+      note: "",
     },
     validationSchema: Yup.object({
-      name: Yup.string().required("Vui lòng nhập tên"),
-      reason: Yup.string().required("Vui lòng nhập lý do"),
-      returnDate: Yup.string().required("Vui lòng chọn ngày trả hàng"),
+      importDate: Yup.string().required("Vui lòng chọn ngày nhập hàng"),
+      paymentDate: Yup.string().required("Vui lòng chọn ngày thanh toán"),
+      supplier: Yup.string().required("Vui lòng chọn nhà cung cấp"),
       warehouseLocation: Yup.string().required("Vui lòng chọn cửa hàng"),
     }),
     onSubmit: handleSubmitForm,
@@ -177,6 +167,7 @@ const CreateReceiptReturn = (props: any) => {
     <React.Fragment>
       <ProductListReceiptModal
         show={productListModal}
+        isCreateNew={true}
         onCancel={productListModalToggle}
         onDone={(selectedProducts) => {
           if (!selectedProducts.length) return;
@@ -192,6 +183,7 @@ const CreateReceiptReturn = (props: any) => {
                 name: item.name,
                 quantity: 1,
                 price: item.price,
+                inventory: item.inventory,
               };
             });
 
@@ -200,7 +192,7 @@ const CreateReceiptReturn = (props: any) => {
         }}
       />
       <ToastContainer closeButton={false} limit={1} />
-      <BreadCrumb title="Tạo mới phiếu trả" pageTitle="Receipt Return" />
+      <BreadCrumb title="Tạo mới phiếu nhập" pageTitle="Products" />
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-x-5">
         <div className="xl:col-span-9">
           <div className="card">
@@ -226,152 +218,11 @@ const CreateReceiptReturn = (props: any) => {
                       id="productCodeInput"
                       className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
                       placeholder="Mã phiếu"
-                      value={`TH${dayjs().format("YYMMDDHHmm")}`}
+                      value={`NH${dayjs().format("YYMMDDHHmm")}`}
                       disabled
                     />
                   </div>
 
-                  {/* loại phiếu trả */}
-                  <div className="xl:col-span-4">
-                    <label
-                      htmlFor="typeSelect"
-                      className="inline-block mb-2 text-base font-medium"
-                    >
-                      Loại phiếu trả
-                    </label>
-
-                    <select
-                      className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
-                      data-choices
-                      data-choices-search-false
-                      name="type"
-                      id="typeSelect"
-                      onChange={(e) => {
-                        validation.setFieldValue("name", "");
-                        validation.setFieldValue("reason", "");
-                        validation.handleChange(e);
-                      }}
-                      value={validation.values.type || ""}
-                    >
-                      <option value="customer"> Khách hàng </option>
-                      <option value="supplier"> Nhà cung cấp </option>
-                    </select>
-
-                    {validation.touched.type && validation.errors.type ? (
-                      <p className="text-red-400">{validation.errors.type}</p>
-                    ) : null}
-                  </div>
-
-                  {/* Ghi chú */}
-                  <div className="lg:col-span-2 xl:col-span-4 row-span-3">
-                    <div>
-                      <label
-                        htmlFor="noteInput"
-                        className="inline-block mb-2 text-base font-medium"
-                      >
-                        Ghi chú
-                      </label>
-                      <textarea
-                        className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
-                        id="noteInput"
-                        name="note"
-                        placeholder="Nhập ghi chú"
-                        rows={4}
-                        onChange={validation.handleChange}
-                        value={validation.values.note || ""}
-                      ></textarea>
-                    </div>
-                  </div>
-
-                  {validation.values.type === "supplier" ? (
-                    <div className="xl:col-span-4">
-                      <label
-                        htmlFor="supplierSelect"
-                        className="inline-block mb-2 text-base font-medium"
-                      >
-                        Nhà cung cấp
-                      </label>
-
-                      <AsyncPaginatedSelect
-                        loadOptions={handleLoadSupplier}
-                        defaultOptions={supplierList.map(
-                          (supplier: string) => ({
-                            label: supplier,
-                            value: supplier,
-                          })
-                        )}
-                        placeholder="Chọn"
-                        debounceTimeout={500}
-                        noOptionsMessage={() => "Không thấy nhà cung cấp"}
-                        createOption={(value) =>
-                          Promise.resolve({
-                            value,
-                            label: value,
-                          })
-                        }
-                        onChange={(option) => {
-                          if (option) {
-                            validation.setFieldValue("name", option.value);
-                          }
-                        }}
-                        value={{
-                          label: validation.values?.supplier,
-                          value: validation.values?.supplier,
-                        }}
-                      />
-                      {validation.touched.name && validation.errors.name ? (
-                        <p className="text-red-400">{validation.errors.name}</p>
-                      ) : null}
-                    </div>
-                  ) : (
-                    <div className="xl:col-span-4">
-                      <label
-                        htmlFor="customerNameInput"
-                        className="inline-block mb-2 text-base font-medium"
-                      >
-                        Tên khách hàng
-                      </label>
-                      <input
-                        type="text"
-                        name="name"
-                        id="customerNameInput"
-                        className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
-                        placeholder="Nhập tên"
-                        onChange={validation.handleChange}
-                        value={validation.values.name || ""}
-                      />
-                      {validation.touched.name && validation.errors.name ? (
-                        <p className="text-red-400">{validation.errors.name}</p>
-                      ) : null}
-                    </div>
-                  )}
-
-                  {/* Ngày trả hàng */}
-                  <div className="xl:col-span-4">
-                    <label
-                      htmlFor="returnDate"
-                      className="inline-block mb-2 text-base font-medium"
-                    >
-                      Ngày trả hàng
-                    </label>
-                    <TimePicker
-                      value={validation.values.returnDate}
-                      onChange={([date]) => {
-                        validation.setFieldValue("returnDate", date);
-                      }}
-                      props={{
-                        placeholder: "Chọn ngày trả hàng",
-                      }}
-                    />
-                    {validation.touched.returnDate &&
-                    validation.errors.returnDate ? (
-                      <p className="text-red-400">
-                        {validation.errors.returnDate}
-                      </p>
-                    ) : null}
-                  </div>
-
-                  {/* Cửa hàng */}
                   <div className="xl:col-span-4">
                     <label
                       htmlFor="warehouseLocationSelect"
@@ -401,65 +252,144 @@ const CreateReceiptReturn = (props: any) => {
                     ) : null}
                   </div>
 
-                  <div className="xl:col-span-4 flex flex-col">
-                    <label className="inline-block mb-2 text-base font-medium">
-                      Lý do trả
-                    </label>
-                    {(validation.values.type === "customer"
-                      ? customerReasons
-                      : supplierReasons
-                    ).map((reason, index) => (
-                      <div key={index} className="flex items-center mt-1">
-                        <input
-                          type="radio"
-                          id={`reason-${index}`}
-                          name="reason"
-                          value={reason}
-                          checked={
-                            selectedReason
-                              ? selectedReason === reason
-                              : index === 0
-                          }
-                          onChange={() => {
-                            validation.setFieldValue("reason", reason);
-                            handleReasonChange(reason);
-                          }}
-                          className="size-4 border rounded-full appearance-none cursor-pointer bg-slate-100 border-slate-200 dark:bg-zink-600 dark:border-zink-500 checked:bg-custom-500 checked:border-custom-500 dark:checked:bg-custom-500 dark:checked:border-custom-500"
-                        />
-                        <label
-                          htmlFor={`reason-${index}`}
-                          className="ml-3 text-gray-700 text-sm"
-                        >
-                          {reason}
-                        </label>
-                      </div>
-                    ))}
+                  {/* Ghi chú */}
+                  <div className="lg:col-span-2 xl:col-span-4 row-span-3">
+                    <div>
+                      <label
+                        htmlFor="noteInput"
+                        className="inline-block mb-2 text-base font-medium"
+                      >
+                        Ghi chú
+                      </label>
+                      <textarea
+                        className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
+                        id="noteInput"
+                        name="note"
+                        placeholder="Nhập ghi chú"
+                        rows={4}
+                        onChange={validation.handleChange}
+                        value={validation.values.note || ""}
+                      ></textarea>
+                    </div>
+                  </div>
 
-                    {selectedReason === "Lý do khác" && (
-                      <div className="mt-2">
-                        <label
-                          htmlFor="customReason"
-                          className="block text-sm font-medium text-gray-700"
-                        >
-                          Nhập lý do của bạn
-                        </label>
-                        <input
-                          type="text"
-                          id="customReason"
-                          value={customReason}
-                          onChange={(e) => {
-                            const reason = e.target.value;
-                            setCustomReason(reason);
-                          }}
-                          className="mt-1 px-3 py-2 form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
-                          placeholder="Nhập lý do hủy đơn"
-                        />
-                      </div>
-                    )}
-                    {validation.touched.reason && validation.errors.reason ? (
-                      <p className="text-red-400">{validation.errors.reason}</p>
+                  {/* Ngày thanh toán */}
+                  <div className="xl:col-span-4">
+                    <label
+                      htmlFor="paymentDate"
+                      className="inline-block mb-2 text-base font-medium"
+                    >
+                      Ngày thanh toán
+                    </label>
+                    <TimePicker
+                      value={validation.values.paymentDate}
+                      onChange={([date]) => {
+                        validation.setFieldValue("paymentDate", date);
+                      }}
+                      props={{
+                        placeholder: "Chọn ngày thanh toán",
+                      }}
+                    />
+                    {validation.touched.paymentDate &&
+                    validation.errors.paymentDate ? (
+                      <p className="text-red-400">
+                        {validation.errors.paymentDate}
+                      </p>
                     ) : null}
                   </div>
+
+                  {/* Ngày nhập hàng */}
+                  <div className="xl:col-span-4">
+                    <label
+                      htmlFor="importDate"
+                      className="inline-block mb-2 text-base font-medium"
+                    >
+                      Ngày nhập hàng
+                    </label>
+                    <TimePicker
+                      value={validation.values.importDate}
+                      onChange={([date]) => {
+                        validation.setFieldValue("importDate", date);
+                      }}
+                      props={{
+                        placeholder: "Chọn ngày nhập hàng",
+                      }}
+                    />
+                    {validation.touched.importDate &&
+                    validation.errors.importDate ? (
+                      <p className="text-red-400">
+                        {validation.errors.importDate}
+                      </p>
+                    ) : null}
+                  </div>
+
+                  <div className="xl:col-span-4">
+                    <label
+                      htmlFor="supplierSelect"
+                      className="inline-block mb-2 text-base font-medium"
+                    >
+                      Nhà cung cấp
+                    </label>
+                    <AsyncPaginatedSelect
+                      loadOptions={handleLoadSupplier}
+                      defaultOptions={supplierList.map((supplier: string) => ({
+                        label: supplier,
+                        value: supplier,
+                      }))}
+                      placeholder="Chọn nhà cung cấp"
+                      debounceTimeout={500}
+                      noOptionsMessage={() => "Không thấy nhà cung cấp"}
+                      createOption={(value) =>
+                        Promise.resolve({
+                          value,
+                          label: value,
+                        })
+                      }
+                      onChange={(option) => {
+                        if (option) {
+                          validation.setFieldValue("supplier", option.value);
+                        }
+                      }}
+                      value={validation.values.supplier ? {
+                        label: validation.values?.supplier,
+                        value: validation.values?.supplier,
+                      } : null}
+                    />
+                    {validation.touched.supplier &&
+                    validation.errors.supplier ? (
+                      <p className="text-red-400">
+                        {validation.errors.supplier}
+                      </p>
+                    ) : null}
+                  </div>
+
+                  {/* <div className="xl:col-span-4"> */}
+                  {/*   <label */}
+                  {/*     htmlFor="productStatusSelect" */}
+                  {/*     className="inline-block mb-2 text-base font-medium" */}
+                  {/*   > */}
+                  {/*     Trạng thái */}
+                  {/*   </label> */}
+                  {/*   <select */}
+                  {/*     className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200" */}
+                  {/*     data-choices */}
+                  {/*     data-choices-search-false */}
+                  {/*     name="status" */}
+                  {/*     id="productStatusSelect" */}
+                  {/*     onChange={validation.handleChange} */}
+                  {/*     value={validation.values.status || ""} */}
+                  {/*   > */}
+                  {/*     <option value="draft">Nháp</option> */}
+                  {/*     <option value="active">Đang xử lý</option> */}
+                  {/*     <option value="inactive">Hoàn thành</option> */}
+                  {/*     <option value="inactive">Hủy phiếu</option> */}
+                  {/*     <option value="inactive">Nhận thiếu hàng</option> */}
+                  {/*     <option value="inactive">Nhận dư hàng</option> */}
+                  {/*   </select> */}
+                  {/*   {validation.touched.status && validation.errors.status ? ( */}
+                  {/*     <p className="text-red-400">{validation.errors.status}</p> */}
+                  {/*   ) : null} */}
+                  {/* </div> */}
 
                   <div className="lg:col-span-2 xl:col-span-12">
                     <div className="flex justify-start">
@@ -549,7 +479,7 @@ const CreateReceiptReturn = (props: any) => {
                 {/* Action button */}
                 <div className="flex justify-end gap-2 mt-8">
                   <Link
-                    to={"/receipt-return/list"}
+                    to={"/receipt-import/list"}
                     className="text-red-500 bg-white btn hover:text-red-500 hover:bg-red-100 focus:text-red-500 focus:bg-red-100 active:text-red-500 active:bg-red-100 dark:bg-zink-700 dark:hover:bg-red-500/10 dark:focus:bg-red-500/10 dark:active:bg-red-500/10"
                   >
                     Hủy bỏ
@@ -582,7 +512,7 @@ const CreateReceiptReturn = (props: any) => {
 
               <div className="px-5 py-8 flex justify-center rounded-md bg-sky-50 dark:bg-zink-600">
                 <Barcode
-                  value={`TH${dayjs().format("YYMMDDHHmm")}`}
+                  value={`NH${dayjs().format("YYMMDDHHmm")}`}
                   format="CODE128"
                   width={2}
                   height={100}
@@ -629,4 +559,4 @@ const CreateReceiptReturn = (props: any) => {
   );
 };
 
-export default withRouter(CreateReceiptReturn);
+export default withRouter(CreateReceiptImport);

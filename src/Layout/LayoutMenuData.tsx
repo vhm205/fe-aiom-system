@@ -41,12 +41,6 @@ const menuData: any = [
         link: "/products",
         parentId: "product-dashboard",
       },
-      // {
-      //   id: "inventory-page",
-      //   label: "Kho, hàng tồn",
-      //   link: "/inventory",
-      //   parentId: "product-dashboard",
-      // },
       {
         id: "import-product-page",
         label: "Nhập hàng",
@@ -87,6 +81,34 @@ const menuData: any = [
           },
         ],
       },
+      {
+        id: "receipt-check-page",
+        label: "Kiểm kho",
+        link: "/#",
+        parentId: "product-dashboard",
+        subItems: [
+          {
+            id: "create-receipt-check-page",
+            label: "Tạo phiếu kiểm",
+            link: "/receipt-check/create",
+            parentId: "product-dashboard",
+          },
+          {
+            id: "list-receipt-check-page",
+            label: "Danh sách phiếu kiểm",
+            link: "/receipt-check/list",
+            parentId: "product-dashboard",
+          },
+          {
+            id: "update-receipt-check-page",
+            label: "Cập nhật phiếu kiểm",
+            link: "/receipt-check/update",
+            parentId: "product-dashboard",
+            isHide: true,
+          },
+        ],
+
+      }
     ],
   },
   {

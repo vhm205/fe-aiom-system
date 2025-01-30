@@ -10,6 +10,7 @@ import {
   PackageCheck,
   PackageX,
   Plus,
+  RefreshCcw,
   MoreHorizontal,
   Trash2,
   FileEdit,
@@ -25,14 +26,16 @@ import { useDispatch, useSelector } from "react-redux";
 import { createSelector } from "reselect";
 
 import {
-  getReceiptReturnList as onGetReceiptReturnList,
-  deleteReceiptReturn as onDeleteReceiptReturn,
+  getReceiptImportList as onGetReceiptImportList,
+  deleteReceiptImport as onDeleteReceiptImport,
+  getReceiptImportByReceiptNumber as onGetReceiptImportInfo,
 } from "slices/thunk";
 import { ToastContainer } from "react-toastify";
 import { PaginationState } from "@tanstack/react-table";
 import TableCustom from "Common/TableCustom";
 import { formatMoney } from "helpers/utils";
-import ShowBarcodeModal from "../components/ShowBarcodeModal";
+import PrintMultipleBarcodeModal from "../components/PrintMultipleBarcodeModal";
+import PrintSingleBarcodeModal from "../components/PrintSingleBarcodeModal";
 import { TimePicker } from "Common/Components/TimePIcker";
 import { getDate } from "helpers/date";
 
@@ -41,13 +44,15 @@ const RECEIPT_STATUS = {
   PROCESSING: "processing",
   COMPLETED: "completed",
   CANCELLED: "cancelled",
+  SHORT_RECEIVED: "short_received",
+  OVER_RECEIVED: "over_received",
 };
 
-const ReceiptReturnList = () => {
+const ReceiptImportList = () => {
   const dispatch = useDispatch<any>();
 
   const selectDataList = createSelector(
-    (state: any) => state.ReceiptReturn,
+    (state: any) => state.ReceiptImport,
     (state) => ({
       data: state?.data || [],
       pagination: state?.pagination || {},
@@ -56,7 +61,7 @@ const ReceiptReturnList = () => {
 
   const { data: receipts, pagination } = useSelector(selectDataList);
 
-  const [eventData, setEventData] = useState<any>();
+  const [eventData, setEventData] = useState<any>({ receiptNumber: "" });
   const [filters, setFilters] = useState<Record<string, string | number>>({});
 
   const [paginationData, setPaginationData] = React.useState<PaginationState>({
@@ -64,9 +69,24 @@ const ReceiptReturnList = () => {
     pageSize: pagination.limit || 10,
   });
 
+  const selectDataReceipt = createSelector(
+    (state: any) => state.ReceiptImport,
+    (state) => ({
+      receiptInfo: state.receiptInfo || {},
+      receiptItems: state.receiptItems || [],
+    })
+  );
+
+  const { receiptItems } = useSelector(selectDataReceipt);
+
+  useEffect(() => {
+    if (!eventData.receiptNumber) return;
+    dispatch(onGetReceiptImportInfo(eventData.receiptNumber));
+  }, [dispatch, eventData.receiptNumber]);
+
   const fetchReceipts = useCallback(() => {
     dispatch(
-      onGetReceiptReturnList({
+      onGetReceiptImportList({
         page: paginationData.pageIndex + 1,
         limit: paginationData.pageSize,
         ...filters,
@@ -81,9 +101,15 @@ const ReceiptReturnList = () => {
 
   // Modals
   const [deleteModal, setDeleteModal] = useState<boolean>(false);
-  const [showBarcodeModal, setShowBarcodeModal] = useState<boolean>(false);
+  const [showPrintMultipleModal, setShowPrintMultipleModal] =
+    useState<boolean>(false);
+  const [showPrintSingleModal, setShowPrintSingleModal] =
+    useState<boolean>(false);
 
-  const showBarcodeModalToggle = () => setShowBarcodeModal(!showBarcodeModal);
+  const showPrintMultipleModalToggle = () =>
+    setShowPrintMultipleModal(!showPrintMultipleModal);
+  const showPrintSingleModalToggle = () =>
+    setShowPrintSingleModal(!showPrintSingleModal);
   const deleteToggle = () => setDeleteModal(!deleteModal);
 
   // Delete Data
@@ -97,13 +123,21 @@ const ReceiptReturnList = () => {
 
   const handleDelete = () => {
     if (eventData) {
-      dispatch(onDeleteReceiptReturn, eventData.id);
+      dispatch(onDeleteReceiptImport(eventData.id));
       setDeleteModal(false);
     }
   };
 
-  const onClickShowBarcode = (cell: any) => {
-    setShowBarcodeModal(true);
+  const onClickShowPrintMultiple = (cell: any) => {
+    setShowPrintMultipleModal(true);
+
+    if (cell.receiptNumber) {
+      setEventData(cell);
+    }
+  };
+
+  const onClickShowPrintSingle = (cell: any) => {
+    setShowPrintSingleModal(true);
 
     if (cell.receiptNumber) {
       setEventData(cell);
@@ -124,7 +158,7 @@ const ReceiptReturnList = () => {
     setFilters((prev) => ({
       ...prev,
       keyword: "",
-      returnDate: "",
+      importDate: "",
       status: "",
       page: 1,
     }));
@@ -170,7 +204,7 @@ const ReceiptReturnList = () => {
         cell: (cell: any) => (
           <>
             <Link
-              to={`/receipt-return/update?id=${cell.row.original.id}`}
+              to={`/receipt-import/update?id=${cell.row.original.id}`}
               className="transition-all duration-150 ease-linear order_id text-custom-500 hover:text-custom-600"
             >
               {cell.getValue()}
@@ -179,25 +213,25 @@ const ReceiptReturnList = () => {
         ),
       },
       {
-        header: "Thời gian trả",
-        accessorKey: "returnDate",
+        header: "Thời gian nhập",
+        accessorKey: "expectedImportDate",
         enableColumnFilter: false,
       },
       {
-        header: "Tên",
-        accessorKey: "name",
+        header: "Nhà cung cấp",
+        accessorKey: "supplier",
         enableColumnFilter: false,
       },
       {
-        header: "Số lượng trả",
-        accessorKey: "quantity",
-        enableColumnFilter: false,
-      },
-      {
-        header: "Tổng tiền",
+        header: "Dư nợ tổng",
         accessorKey: "totalAmount",
         enableColumnFilter: false,
         cell: (cell: any) => formatMoney(cell.getValue()),
+      },
+      {
+        header: "Ghi chú",
+        accessorKey: "note",
+        enableColumnFilter: false,
       },
       {
         header: "Trạng thái",
@@ -230,7 +264,20 @@ const ReceiptReturnList = () => {
                   className="block px-4 py-1.5 text-base transition-all duration-200 ease-linear text-slate-600 dropdown-item hover:bg-slate-100 hover:text-slate-500 focus:bg-slate-100 focus:text-slate-500 dark:text-zink-100 dark:hover:bg-zink-500 dark:hover:text-zink-200 dark:focus:bg-zink-500 dark:focus:text-zink-200"
                   onClick={() => {
                     const data = cell.row.original;
-                    onClickShowBarcode(data);
+                    onClickShowPrintSingle(data);
+                  }}
+                >
+                  <Eye className="inline-block size-3 ltr:mr-1 rtl:ml-1" />{" "}
+                  <span className="align-middle">Barcode</span>
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#!"
+                  className="block px-4 py-1.5 text-base transition-all duration-200 ease-linear text-slate-600 dropdown-item hover:bg-slate-100 hover:text-slate-500 focus:bg-slate-100 focus:text-slate-500 dark:text-zink-100 dark:hover:bg-zink-500 dark:hover:text-zink-200 dark:focus:bg-zink-500 dark:focus:text-zink-200"
+                  onClick={() => {
+                    const data = cell.row.original;
+                    onClickShowPrintMultiple(data);
                   }}
                 >
                   <Eye className="inline-block size-3 ltr:mr-1 rtl:ml-1" />{" "}
@@ -239,7 +286,7 @@ const ReceiptReturnList = () => {
               </li>
               <li>
                 <Link
-                  to={`/receipt-return/update?id=${cell.row.original.id}`}
+                  to={`/receipt-import/update?id=${cell.row.original.id}`}
                   data-modal-target="addOrderModal"
                   className="block px-4 py-1.5 text-base transition-all duration-200 ease-linear text-slate-600 hover:bg-slate-100 hover:text-slate-500 focus:bg-slate-100 focus:text-slate-500 dark:text-zink-100 dark:hover:bg-zink-500 dark:hover:text-zink-200 dark:focus:bg-zink-500 dark:focus:text-zink-200"
                 >
@@ -270,19 +317,29 @@ const ReceiptReturnList = () => {
 
   return (
     <React.Fragment>
-      <BreadCrumb title="Danh sách phiếu trả " pageTitle="Receipt Return" />
+      <BreadCrumb title="Danh sách phiếu nhập" pageTitle="Phiếu nhập" />
       <DeleteModal
         show={deleteModal}
         onHide={deleteToggle}
         onDelete={handleDelete}
       />
-      {eventData?.receiptNumber && (
-        <ShowBarcodeModal
-          barcode={eventData.receiptNumber}
-          show={showBarcodeModal}
-          onClose={showBarcodeModalToggle}
-        />
-      )}
+
+      {eventData?.receiptNumber ? (
+        showPrintMultipleModal ? (
+          <PrintMultipleBarcodeModal
+            show={showPrintMultipleModal}
+            onClose={showPrintMultipleModalToggle}
+            receiptItems={receiptItems}
+          />
+        ) : (
+          <PrintSingleBarcodeModal
+            show={showPrintSingleModal}
+            onClose={showPrintSingleModalToggle}
+            barcode={eventData.receiptNumber}
+          />
+        )
+      ) : null}
+
       <ToastContainer closeButton={false} limit={1} />
 
       <div className="card" id="ordersTable">
@@ -293,7 +350,7 @@ const ReceiptReturnList = () => {
                 <input
                   type="text"
                   className="ltr:pl-8 rtl:pr-8 search form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
-                  placeholder="Tìm kiếm theo mã phiếu, tên ..."
+                  placeholder="Tìm kiếm theo mã phiếu, nhà cung cấp ..."
                   autoComplete="off"
                   onChange={debounce(filterSearchData, 700)}
                 />
@@ -302,17 +359,17 @@ const ReceiptReturnList = () => {
             </div>
             <div className="lg:col-span-2">
               <TimePicker
-                value={filters.returnDate as string}
+                value={filters.importDate as string}
                 onChange={([date]) => {
                   setFilters((prev) => ({
                     ...prev,
-                    returnDate: getDate(date).toISOString(),
+                    importDate: getDate(date).toISOString(),
                     page: 1,
                   }));
                 }}
                 props={{
-                  placeholder: "Chọn ngày trả hàng",
-                  id: "returnDate",
+                  placeholder: "Chọn ngày nhập hàng",
+                  id: "importDate",
                 }}
               />
             </div>
@@ -327,7 +384,7 @@ const ReceiptReturnList = () => {
             <div className="lg:col-span-2 lg:col-start-11">
               <div className="ltr:lg:text-right rtl:lg:text-left">
                 <Link
-                  to="/receipt-return/create"
+                  to="/receipt-import/create"
                   className="text-white btn bg-custom-500 border-custom-500 hover:text-white hover:bg-custom-600 hover:border-custom-600 focus:text-white focus:bg-custom-600 focus:border-custom-600 focus:ring focus:ring-custom-100 active:text-white active:bg-custom-600 active:border-custom-600 active:ring active:ring-custom-100 dark:ring-custom-400/20"
                 >
                   <Plus className="inline-block size-4" />{" "}
@@ -384,10 +441,38 @@ const ReceiptReturnList = () => {
               <Link
                 to="#"
                 data-tab-toggle
+                data-target="returnsOrders"
+                className="inline-block px-4 py-1.5 text-base transition-all duration-300 ease-linear rounded-md text-slate-500 dark:text-zink-200 border border-transparent group-[.active]:bg-custom-500 group-[.active]:text-white dark:group-[.active]:text-white hover:text-custom-500 dark:hover:text-custom-500 active:text-custom-500 dark:active:text-custom-500 -mb-[1px]"
+                onClick={() => {
+                  toggleTab("4", "short_received");
+                }}
+              >
+                <RefreshCcw className="inline-block size-4 ltr:mr-1 rtl:ml-1" />{" "}
+                <span className="align-middle">Giao thiếu</span>
+              </Link>
+            </li>
+            <li className={`group ${activeTab === "5" && "active"}`}>
+              <Link
+                to="#"
+                data-tab-toggle
+                data-target="returnsOrders"
+                className="inline-block px-4 py-1.5 text-base transition-all duration-300 ease-linear rounded-md text-slate-500 dark:text-zink-200 border border-transparent group-[.active]:bg-custom-500 group-[.active]:text-white dark:group-[.active]:text-white hover:text-custom-500 dark:hover:text-custom-500 active:text-custom-500 dark:active:text-custom-500 -mb-[1px]"
+                onClick={() => {
+                  toggleTab("5", "over_received");
+                }}
+              >
+                <RefreshCcw className="inline-block size-4 ltr:mr-1 rtl:ml-1" />{" "}
+                <span className="align-middle">Giao dư</span>
+              </Link>
+            </li>
+            <li className={`group ${activeTab === "6" && "active"}`}>
+              <Link
+                to="#"
+                data-tab-toggle
                 data-target="cancelledOrders"
                 className="inline-block px-4 py-1.5 text-base transition-all duration-300 ease-linear rounded-md text-slate-500 dark:text-zink-200 border border-transparent group-[.active]:bg-custom-500 group-[.active]:text-white dark:group-[.active]:text-white hover:text-custom-500 dark:hover:text-custom-500 active:text-custom-500 dark:active:text-custom-500 -mb-[1px]"
                 onClick={() => {
-                  toggleTab("4", "cancelled");
+                  toggleTab("6", "cancelled");
                 }}
               >
                 <PackageX className="inline-block size-4 ltr:mr-1 rtl:ml-1 " />{" "}
@@ -431,7 +516,7 @@ const ReceiptReturnList = () => {
   );
 };
 
-export default ReceiptReturnList;
+export default ReceiptImportList;
 
 const Status = ({ item }: any) => {
   switch (item) {
@@ -457,6 +542,18 @@ const Status = ({ item }: any) => {
       return (
         <span className="delivery_status px-2.5 py-0.5 text-xs inline-block font-medium rounded border bg-red-100 border-red-200 text-red-500 dark:bg-red-500/20 dark:border-red-500/20">
           Đã hủy
+        </span>
+      );
+    case RECEIPT_STATUS.OVER_RECEIVED:
+      return (
+        <span className="delivery_status px-2.5 py-0.5 text-xs inline-block font-medium rounded border bg-yellow-100 border-yellow-200 text-yellow-500 dark:bg-yellow-500/20 dark:border-yellow-500/20">
+          Giao dư
+        </span>
+      );
+    case RECEIPT_STATUS.SHORT_RECEIVED:
+      return (
+        <span className="delivery_status px-2.5 py-0.5 text-xs inline-block font-medium rounded border bg-sky-100 border-sky-200 text-sky-500 dark:bg-sky-500/20 dark:border-sky-500/20 dark:text-zink-200">
+          Giao thiếu
         </span>
       );
     default:

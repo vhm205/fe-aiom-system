@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import AsyncCreatableSelect from "react-select/async-creatable";
+import AsyncSelect from "react-select/async";
 import {
   ActionMeta,
   GroupBase,
@@ -20,7 +21,7 @@ interface Response {
 
 interface AsyncPaginatedSelectProps {
   loadOptions: (search: string, page: number) => Promise<Response>;
-  createOption: (inputValue: string) => Promise<Option>; // New prop for creating options
+  createOption?: (inputValue: string) => Promise<Option>; // New prop for creating options
   defaultOptions?: OptionsOrGroups<Option, GroupBase<Option>>;
   placeholder?: string;
   isClearable?: boolean;
@@ -47,8 +48,9 @@ const AsyncPaginatedSelect: React.FC<AsyncPaginatedSelectProps> = ({
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
-  const [options, setOptions] =
-    useState<OptionsOrGroups<Option, GroupBase<Option>>>([]);
+  const [options, setOptions] = useState<
+    OptionsOrGroups<Option, GroupBase<Option>>
+  >([]);
   const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
@@ -111,6 +113,8 @@ const AsyncPaginatedSelect: React.FC<AsyncPaginatedSelectProps> = ({
 
   const handleCreateOption = useCallback(
     async (inputValue: string) => {
+      if (!createOption) return;
+
       setIsLoading(true);
 
       try {
@@ -127,6 +131,24 @@ const AsyncPaginatedSelect: React.FC<AsyncPaginatedSelectProps> = ({
     },
     [createOption, onChange]
   );
+
+  if (!createOption) {
+    return (
+      <AsyncSelect<Option, false>
+        cacheOptions
+        loadOptions={debouncedLoadOptions}
+        defaultOptions={options}
+        onInputChange={handleInputChange}
+        onChange={onChange}
+        placeholder={placeholder}
+        isClearable={isClearable}
+        isLoading={isLoading}
+        onMenuScrollToBottom={handleMenuScrollToBottom}
+        value={value}
+        noOptionsMessage={noOptionsMessage}
+      />
+    );
+  }
 
   return (
     <AsyncCreatableSelect<Option, false>

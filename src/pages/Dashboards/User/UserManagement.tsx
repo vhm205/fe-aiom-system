@@ -68,7 +68,7 @@ const UserManagement = () => {
 
   // Get Data
   useEffect(() => {
-    dispatch(onGetUserList());
+    dispatch(onGetUserList({}));
   }, [dispatch]);
 
   useEffect(() => {
@@ -103,13 +103,10 @@ const UserManagement = () => {
     setShow(true);
   };
 
-  // validation
   const validation: any = useFormik({
-    // enableReinitialize : use this flag when initial values needs to be changed
     enableReinitialize: true,
 
     initialValues: {
-      // img: (eventData && eventData.img) || '',
       fullname: (eventData && eventData.fullname) || "",
       phone: (eventData && eventData.phone) || "",
       username: (eventData && eventData.username) || "",
@@ -119,7 +116,6 @@ const UserManagement = () => {
       role: (eventData && eventData.role) || "",
     },
     validationSchema: Yup.object({
-      // img: Yup.string().required("Please Add Image"),
       fullname: Yup.string().required("Vui lòng nhập họ và tên"),
       phone: Yup.string().required("Vui lòng nhập số điện thoại"),
       username: Yup.string().required("Vui lòng nhập tên đăng nhập"),
@@ -140,7 +136,6 @@ const UserManagement = () => {
       } else {
         const newUser = {
           ...values,
-          // code: "#TW15000" + (Math.floor(Math.random() * (30 - 20)) + 20).toString(),
         };
         // save new user
         dispatch(onAddUserList(newUser));
@@ -241,16 +236,21 @@ const UserManagement = () => {
       },
       {
         header: "ID",
-        accessorKey: "id",
+        accessorKey: "code",
         enableColumnFilter: false,
-        cell: (cell: any) => (
-          <Link
-            to="#!"
-            className="transition-all duration-150 ease-linear text-custom-500 hover:text-custom-600 user-id"
-          >
-            {cell.getValue()}
-          </Link>
-        ),
+        cell: (cell: any) => {
+          const data = cell.row.original;
+
+          return (
+            <Link
+              to="#!"
+              className="transition-all duration-150 ease-linear text-custom-500 hover:text-custom-600 user-id"
+              onClick={() => handleUpdateDataClick(data)}
+            >
+              {cell.getValue()}
+            </Link>
+          );
+        },
       },
       {
         header: "Tên đăng nhập",
@@ -325,15 +325,6 @@ const UserManagement = () => {
               className="absolute z-50 py-2 mt-1 ltr:text-left rtl:text-right list-none bg-white rounded-md shadow-md min-w-[10rem] dark:bg-zink-600"
               aria-labelledby="usersAction1"
             >
-              {/* <li> */}
-              {/*   <Link */}
-              {/*     className="block px-4 py-1.5 text-base transition-all duration-200 ease-linear text-slate-600 hover:bg-slate-100 hover:text-slate-500 focus:bg-slate-100 focus:text-slate-500 dark:text-zink-100 dark:hover:bg-zink-500 dark:hover:text-zink-200 dark:focus:bg-zink-500 dark:focus:text-zink-200" */}
-              {/*     to="/pages-account" */}
-              {/*   > */}
-              {/*     <Eye className="inline-block size-3 ltr:mr-1 rtl:ml-1" />{" "} */}
-              {/*     <span className="align-middle">Overview</span> */}
-              {/*   </Link> */}
-              {/* </li> */}
               <li>
                 <Link
                   data-modal-target="addUserModal"
@@ -468,8 +459,8 @@ const UserManagement = () => {
                   columns={columns || []}
                   data={user || []}
                   customPageSize={10}
-                  divclassName="-mx-5 -mb-5 overflow-x-auto"
-                  tableclassName="w-full border-separate table-custom border-spacing-y-1 whitespace-nowrap"
+                  divclassName="-mx-5 -mb-5"
+                  tableclassName="w-full border-separate table-custom border-spacing-y-1 whitespace-nowrap overflow-x-auto"
                   theadclassName="text-left relative rounded-md bg-slate-100 dark:bg-zink-600 after:absolute ltr:after:border-l-2 rtl:after:border-r-2 ltr:after:left-0 rtl:after:right-0 after:top-0 after:bottom-0 after:border-transparent [&.active]:after:border-custom-500 [&.active]:bg-slate-100 dark:[&.active]:bg-zink-600"
                   thclassName="px-3.5 py-2.5 first:pl-5 last:pr-5 font-semibold"
                   tdclassName="px-3.5 py-2.5 first:pl-5 last:pr-5"
@@ -687,8 +678,12 @@ const UserManagement = () => {
                 name="role"
                 onChange={validation.handleChange}
                 value={validation.values.role || ""}
+                disabled={validation.values.role === "supervisor"}
               >
                 <option value="">Chức vụ</option>
+                {validation.values.role === "supervisor" && (
+                  <option value="supervisor">supervisor</option>
+                )}
                 <option value="admin">admin</option>
                 <option value="user">user</option>
               </select>

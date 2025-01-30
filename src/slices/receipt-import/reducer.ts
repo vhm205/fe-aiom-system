@@ -3,6 +3,7 @@ import {
   getReceiptImportList,
   deleteReceiptImport,
   getReceiptImportInfo,
+  getReceiptImportByReceiptNumber,
 } from "./thunk";
 
 export const initialState = {
@@ -30,6 +31,15 @@ const ReceiptSlice = createSlice({
     // get info
     builder.addCase(
       getReceiptImportInfo.fulfilled,
+      (state: any, action: any) => {
+        if (!action.payload) return;
+        state.receiptInfo = action.payload?.receipt;
+        state.receiptItems = action.payload?.items;
+      }
+    );
+    // get info by receipt number
+    builder.addCase(
+      getReceiptImportByReceiptNumber.fulfilled,
       (state: any, action: any) => {
         if (!action.payload) return;
         state.receiptInfo = action.payload?.receipt;

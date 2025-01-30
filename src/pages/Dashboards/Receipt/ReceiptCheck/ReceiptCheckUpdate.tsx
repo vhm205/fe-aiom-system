@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import BreadCrumb from "Common/BreadCrumb";
-import CreatableSelect from "react-select/creatable";
 import Barcode from "react-barcode";
 
 // Formik
@@ -29,17 +28,9 @@ import { TimePicker } from "Common/Components/TimePIcker";
 import { getDate } from "helpers/date";
 import AsyncPaginatedSelect from "Common/Components/Select/AsyncPaginatedSelect";
 
-interface Option {
-  readonly label: string;
-  readonly value?: string;
-  readonly options?: Option[];
-  readonly isDisabled?: boolean;
-}
-
-const UpdateReceiptImport = (props: any) => {
+const UpdateReceiptCheck = (props: any) => {
   const [searchParams] = useSearchParams();
   const [rows, setRows] = useState<any[]>([]);
-  const [supplier, setSupplier] = useState<Option>();
 
   const [productListModal, setProductListModal] = useState(false);
   const productListModalToggle = () => setProductListModal(!productListModal);
@@ -80,15 +71,6 @@ const UpdateReceiptImport = (props: any) => {
     }));
     setRows(items);
   }, [receiptItems]);
-
-  useEffect(() => {
-    if (!receiptInfo) return;
-
-    setSupplier({
-      label: receiptInfo.supplier,
-      value: receiptInfo.supplier,
-    });
-  }, [receiptInfo]);
 
   const receiptId = useMemo(() => searchParams.get("id"), [searchParams]);
 
@@ -137,7 +119,7 @@ const UpdateReceiptImport = (props: any) => {
 
     try {
       const response: IHttpResponse = await request.put(
-        `/receipt-imports/${receiptId}`,
+        `/receipt-checks/${receiptId}`,
         payload
       );
 
@@ -149,7 +131,7 @@ const UpdateReceiptImport = (props: any) => {
       toast.success("Cập nhật phiếu thành công");
 
       setTimeout(() => {
-        props.router.navigate("/receipt-import/list");
+        props.router.navigate("/receipt-check/list");
       }, 700);
     } catch (error: any) {
       toast.error(error.message);
@@ -157,7 +139,6 @@ const UpdateReceiptImport = (props: any) => {
   };
 
   const validation: any = useFormik({
-    // enableReinitialize : use this flag when initial values needs to be changed
     enableReinitialize: true,
 
     initialValues: {
@@ -604,4 +585,4 @@ const UpdateReceiptImport = (props: any) => {
   );
 };
 
-export default withRouter(UpdateReceiptImport);
+export default withRouter(UpdateReceiptCheck);

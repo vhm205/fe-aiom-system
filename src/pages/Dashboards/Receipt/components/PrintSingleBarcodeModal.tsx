@@ -10,10 +10,22 @@ interface props {
   onClose?: () => void;
 }
 
-const ShowBarcodeModal: React.FC<props> = ({ show, barcode, onClose }) => {
+const PrintSingleBarcodeModal: React.FC<props> = ({
+  show,
+  barcode,
+  onClose,
+}) => {
   const [isButtonLoading] = useState(false);
   const barcodeRef = React.useRef(null);
-  const handlePrint = useReactToPrint({ contentRef: barcodeRef });
+  const handlePrint = useReactToPrint({
+    pageStyle: `@media print {
+      @page {
+        size: 400mm 400mm;
+        margin: 0;
+      }
+    }`,
+    contentRef: barcodeRef,
+  });
 
   return (
     <React.Fragment>
@@ -34,7 +46,6 @@ const ShowBarcodeModal: React.FC<props> = ({ show, barcode, onClose }) => {
         <Modal.Body className="max-h-[calc(theme('height.screen')_-_180px)] p-4 overflow-y-auto">
           <div
             className="flex flex-col items-center justify-center"
-            ref={barcodeRef}
           >
             <Barcode
               value={barcode} // Giá trị cần mã hóa
@@ -59,8 +70,16 @@ const ShowBarcodeModal: React.FC<props> = ({ show, barcode, onClose }) => {
           </button>
         </Modal.Footer>
       </Modal>
+
+      <div className="print-only" ref={barcodeRef}>
+        <div className={`grid grid-cols-2 gap-2`}>
+          <div className="p-2 text-center">
+            <Barcode value={barcode} displayValue />
+          </div>
+        </div>
+      </div>
     </React.Fragment>
   );
 };
 
-export default ShowBarcodeModal;
+export default PrintSingleBarcodeModal;

@@ -1,6 +1,8 @@
 import React from "react";
 import { Minus, Plus } from "lucide-react";
 
+import "./counter.css";
+
 interface CounterProps {
   initialValue?: number;
   name: string;
@@ -49,7 +51,16 @@ export const Counter: React.FC<CounterProps> = ({
           value={count}
           min="1"
           max="100"
-          readOnly
+          onChange={(e) => {
+            if(e.target.value === "") {
+              return;
+            }
+
+            const newCount = parseInt(e.target.value, 10);
+            setCount(newCount);
+            onCountChange?.(newCount);
+          }}
+          // readOnly
         />
         <button
           type="button"

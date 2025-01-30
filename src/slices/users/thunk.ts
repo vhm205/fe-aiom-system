@@ -4,27 +4,32 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { request } from "helpers/axios";
 import { IHttpResponse } from "types";
+import { convertObjToQueryString } from "helpers/utils";
 
-export const getUserList = createAsyncThunk("users/getUserList", async () => {
-  try {
-    const response: IHttpResponse = await request.get(`/users`);
+export const getUserList = createAsyncThunk(
+  "users/getUserList",
+  async (payload?: any) => {
+    try {
+      const query = convertObjToQueryString(payload);
 
-    if (
-      (response.statusCode && response.statusCode !== 200) ||
-      !response.success
-    ) {
-      throw new Error(response.message);
+      const response: IHttpResponse = await request.get(`/users?${query}`);
+
+      if (
+        (response.statusCode && response.statusCode !== 200) ||
+        !response.success
+      ) {
+        throw new Error(response.message);
+      }
+
+      return {
+        data: response.data,
+        metadata: response.metadata,
+      };
+    } catch (error: any) {
+      return null;
     }
-
-    return {
-      data: response.data,
-      metadata: response.metadata,
-    };
-  } catch (error: any) {
-    toast.error(error.message, { autoClose: 2000 });
-    return null;
   }
-});
+);
 
 export const addUserList = createAsyncThunk(
   "users/addUserList",
@@ -50,7 +55,7 @@ export const addUserList = createAsyncThunk(
       toast.error(error.message, { autoClose: 2000 });
       return null;
     }
-  },
+  }
 );
 
 export const updateUserList = createAsyncThunk(
@@ -75,7 +80,7 @@ export const updateUserList = createAsyncThunk(
       toast.error(error.message, { autoClose: 2000 });
       return null;
     }
-  },
+  }
 );
 
 export const deleteUserList = createAsyncThunk(
@@ -97,5 +102,5 @@ export const deleteUserList = createAsyncThunk(
       toast.error(error.message, { autoClose: 2000 });
       return null;
     }
-  },
+  }
 );

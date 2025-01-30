@@ -12,15 +12,19 @@ import UserManagement from "pages/Dashboards/User/UserManagement";
 import ProductList from "pages/Dashboards/Product/ProductList";
 
 // receipt import
-import ReceiptImportCreate from "pages/Dashboards/Product/ReceiptImport/ReceiptImportCreate";
-import ReceiptImportUpdate from "pages/Dashboards/Product/ReceiptImport/ReceiptImportUpdate";
-import ReceiptImportList from "pages/Dashboards/Product/ReceiptImport/ReceiptImportList";
-
+import ReceiptImportCreate from "pages/Dashboards/Receipt/ReceiptImport/ReceiptImportCreate";
+import ReceiptImportUpdate from "pages/Dashboards/Receipt/ReceiptImport/ReceiptImportUpdate";
+import ReceiptImportList from "pages/Dashboards/Receipt/ReceiptImport/ReceiptImportList";
 
 // receipt return
-import ReceiptReturnCreate from "pages/Dashboards/Product/ReceiptReturn/ReceiptReturnCreate";
-import ReceiptReturnUpdate from "pages/Dashboards/Product/ReceiptReturn/ReceiptReturnUpdate";
-import ReceiptReturnList from "pages/Dashboards/Product/ReceiptReturn/ReceiptReturnList";
+import ReceiptReturnCreate from "pages/Dashboards/Receipt/ReceiptReturn/ReceiptReturnCreate";
+import ReceiptReturnUpdate from "pages/Dashboards/Receipt/ReceiptReturn/ReceiptReturnUpdate";
+import ReceiptReturnList from "pages/Dashboards/Receipt/ReceiptReturn/ReceiptReturnList";
+
+// receipt check
+import ReceiptCheckCreate from "pages/Dashboards/Receipt/ReceiptCheck/ReceiptCheckCreate";
+import ReceiptCheckUpdate from "pages/Dashboards/Receipt/ReceiptCheck/ReceiptCheckUpdate";
+import ReceiptCheckList from "pages/Dashboards/Receipt/ReceiptCheck/ReceiptCheckList";
 
 interface RouteObject {
   path: string;
@@ -46,6 +50,11 @@ const authProtectedRoutes: Array<RouteObject> = [
   { path: "/receipt-return/create", component: ReceiptReturnCreate },
   { path: "/receipt-return/update", component: ReceiptReturnUpdate },
   { path: "/receipt-return/list", component: ReceiptReturnList },
+
+  // receipt check
+  { path: "/receipt-check/create", component: ReceiptCheckCreate },
+  { path: "/receipt-check/update", component: ReceiptCheckUpdate },
+  { path: "/receipt-check/list", component: ReceiptCheckList },
 
   // profile
   { path: "/user-profile", component: UserProfile },

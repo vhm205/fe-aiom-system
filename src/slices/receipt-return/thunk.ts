@@ -94,3 +94,32 @@ export const deleteReceiptReturn = createAsyncThunk(
     }
   }
 );
+
+export const getReceiptReturnByReceiptNumber = createAsyncThunk(
+  `${TYPE_PREFIX}/getReceiptReturnByReceiptNumber`,
+  async (event?: any) => {
+    try {
+      const response: IHttpResponse = await request.get(
+        `/receipt-return/receipt-items/${event}`
+      );
+
+      if (
+        (response.statusCode && response.statusCode !== 200) ||
+        !response.success
+      ) {
+        toast.error(response.message);
+        return null;
+      }
+
+      const { receipt, items } = response.data;
+
+      return {
+        receipt,
+        items,
+      };
+    } catch (error: any) {
+      toast.error(error.message, { autoClose: 2000 });
+      return null;
+    }
+  }
+);

@@ -34,7 +34,7 @@ export const loginUser =
       if (response.data) {
         setTimeout(() => {
           dispatch(loginSuccess(response));
-          history("/dashboard");
+          history("/products");
         }, 500);
       }
     } catch (error) {
