@@ -237,7 +237,8 @@ const ReceiptCheckList = () => {
         cell: (cell: any) => (
           <>
             <Link
-              to={`/receipt-check/update?id=${cell.row.original.id}`}
+              // to={`/receipt-check/update?id=${cell.row.original.id}`}
+              to="#!"
               className="transition-all duration-150 ease-linear order_id text-custom-500 hover:text-custom-600"
             >
               {cell.getValue()}

@@ -64,7 +64,7 @@ const CreateReceiptCheck = (props: any) => {
 
   const totalAmount = useMemo(() => {
     return rows.reduce((total, row) => {
-      return total + row.quantity * row.price;
+      return total + row.inventory * row.price;
     }, 0);
   }, [rows]);
 

@@ -218,7 +218,7 @@ const ProductListReceiptModal: FC<Props> = ({
                   )
                 }
                 onChange={() => {
-                  const { id, productCode, productName, costPrice } =
+                  const { id, productCode, productName, costPrice, inventory } =
                     cell.row.original;
 
                   handleCheckboxChange({
@@ -226,6 +226,7 @@ const ProductListReceiptModal: FC<Props> = ({
                     code: productCode,
                     name: productName,
                     price: costPrice,
+                    inventory: inventory,
                   });
                 }}
               />
