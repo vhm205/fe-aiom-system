@@ -30,8 +30,21 @@ const RouteIndex = () => {
               <NonAuthLayout>
                 <route.component />
               </NonAuthLayout>
-            } />
+            }
+          />
         ))}
+
+        <Route
+          path='*'
+          element={
+            <NonAuthLayout>
+              <div className="flex flex-col items-center justify-center min-h-screen">
+                <h1 className="text-5xl font-bold mb-4">404 - Page Not Found</h1>
+                <p className="mt-2 text-lg">Sorry, the page you are looking for does not exist.</p>
+              </div>
+            </NonAuthLayout>
+          }
+        />
       </Routes>
     </React.Fragment>
   );

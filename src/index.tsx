@@ -9,6 +9,7 @@ import rootReducer from "./slices";
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
 );
+
 const store = configureStore({
   reducer: rootReducer,
   devTools: process.env.REACT_APP_ENV !== 'production',

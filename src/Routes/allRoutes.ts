@@ -2,7 +2,7 @@
 import UserProfile from "pages/Authentication/UserProfile";
 import Login from "pages/Authentication/Login";
 import Logout from "pages/Authentication/LogOut";
-import Register from "pages/Authentication/Register";
+// import Register from "pages/Authentication/Register";
 
 // dashboard
 import Ecommerce from "pages/Dashboards/Ecommerce";
@@ -64,7 +64,7 @@ const publicRoutes = [
   // authentication
   { path: "/login", component: Login },
   { path: "/logout", component: Logout },
-  { path: "/register", component: Register },
+  // { path: "/register", component: Register },
 ];
 
 export { authProtectedRoutes, publicRoutes };

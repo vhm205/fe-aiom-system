@@ -49,6 +49,35 @@ interface Props {
   onDone?: (items: any) => void;
 }
 
+const Status = ({ item }: any) => {
+  switch (item) {
+    case PRODUCT_STATUS.draft:
+      return (
+        <span className="status px-2.5 py-0.5 inline-block text-xs font-medium rounded border bg-orange-100 border-transparent text-orange-500 dark:bg-orange-500/20 dark:border-transparent">
+          Nháp
+        </span>
+      );
+    case PRODUCT_STATUS.active:
+      return (
+        <span className="status px-2.5 py-0.5 inline-block text-xs font-medium rounded border bg-green-100 border-transparent text-green-500 dark:bg-green-500/20 dark:border-transparent">
+          Hoạt động
+        </span>
+      );
+    case PRODUCT_STATUS.inactive:
+      return (
+        <span className="status px-2.5 py-0.5 inline-block text-xs font-medium rounded border bg-red-100 border-transparent text-red-500 dark:bg-red-500/20 dark:border-transparent">
+          Không hoạt động
+        </span>
+      );
+    default:
+      return (
+        <span className="status px-2.5 py-0.5 inline-block text-xs font-medium rounded border bg-green-100 border-transparent text-green-500 dark:bg-green-500/20 dark:border-transparent">
+          {item}
+        </span>
+      );
+  }
+};
+
 const ProductListReceiptModal: FC<Props> = ({
   selectedItems,
   isCreateNew,
@@ -437,32 +466,3 @@ const ProductListReceiptModal: FC<Props> = ({
 };
 
 export default ProductListReceiptModal;
-
-const Status = ({ item }: any) => {
-  switch (item) {
-    case PRODUCT_STATUS.draft:
-      return (
-        <span className="status px-2.5 py-0.5 inline-block text-xs font-medium rounded border bg-orange-100 border-transparent text-orange-500 dark:bg-orange-500/20 dark:border-transparent">
-          Nháp
-        </span>
-      );
-    case PRODUCT_STATUS.active:
-      return (
-        <span className="status px-2.5 py-0.5 inline-block text-xs font-medium rounded border bg-green-100 border-transparent text-green-500 dark:bg-green-500/20 dark:border-transparent">
-          Hoạt động
-        </span>
-      );
-    case PRODUCT_STATUS.inactive:
-      return (
-        <span className="status px-2.5 py-0.5 inline-block text-xs font-medium rounded border bg-red-100 border-transparent text-red-500 dark:bg-red-500/20 dark:border-transparent">
-          Không hoạt động
-        </span>
-      );
-    default:
-      return (
-        <span className="status px-2.5 py-0.5 inline-block text-xs font-medium rounded border bg-green-100 border-transparent text-green-500 dark:bg-green-500/20 dark:border-transparent">
-          {item}
-        </span>
-      );
-  }
-};
