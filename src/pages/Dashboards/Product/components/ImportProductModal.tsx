@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useLayoutEffect, useState } from "react";
 import Modal from "Common/Components/Modal";
 import { Loader2 } from "lucide-react";
 import * as XLSX from "xlsx";
@@ -7,6 +7,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import TableContainer from "Common/TableContainer";
 import { request } from "helpers/axios";
 import { formatMoney } from "helpers/utils";
+import { IHttpResponse } from "types";
 
 interface props {
   show: boolean;
@@ -58,10 +59,14 @@ const ImportProductModal: React.FC<props> = ({
     formData.append("file", file);
 
     try {
-      await request.post(`/products/import?type=${importType}`, formData, {
+      const response: IHttpResponse = await request.post(`/products/import?type=${importType}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
+      if (!response.success) {
+        throw new Error('Có lỗi xảy ra khi nhập file excel sản phẩm!');
+      }
+      
       toast.success("Nhập file excel sản phẩm thành công!");
     } catch (error: any) {
       toast.error(error.message);
@@ -83,7 +88,7 @@ const ImportProductModal: React.FC<props> = ({
     onCancel();
   };
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const loadExcelData = async () => {
       try {
         setLoading(true);
@@ -125,7 +130,7 @@ const ImportProductModal: React.FC<props> = ({
           <h5 className="text-16">Preview</h5>
         </Modal.Header>
         <Modal.Body className="max-h-[calc(theme('height.screen')_-_180px)] min-h-[calc(theme('height.screen')_-_500px)] p-4 overflow-y-auto">
-          {isLoading && !excelData.length && (
+          {isLoading && (
             <div className="min-h-[calc(theme('height.screen')_-_500px)] inset-0 flex items-center justify-center bg-opacity-50">
               <div className="inline-block size-10 border-2 rounded-full animate-spin border-l-transparent border-custom-500"></div>
             </div>
