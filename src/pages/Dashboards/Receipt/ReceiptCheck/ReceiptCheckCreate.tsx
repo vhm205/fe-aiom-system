@@ -78,7 +78,7 @@ const CreateReceiptCheck = (props: any) => {
       productId: row.id,
       productCode: row.code,
       productName: row.name,
-      quantity: row.quantity,
+      quantity: 1,
       inventory: row.inventory,
       costPrice: row.price,
     }));
