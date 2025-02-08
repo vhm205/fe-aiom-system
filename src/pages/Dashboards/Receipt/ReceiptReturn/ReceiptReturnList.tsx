@@ -378,14 +378,16 @@ const ReceiptReturnList = () => {
                 }}
               />
             </div>
-            <button
-              type="button"
-              className="text-red-500 bg-white btn hover:text-red-500 hover:bg-red-100 focus:text-red-500 focus:bg-red-100 active:text-red-500 active:bg-red-100 dark:bg-zink-700 dark:hover:bg-red-500/10 dark:focus:bg-red-500/10 dark:active:bg-red-500/10"
-              onClick={resetFilters}
-            >
-              Xóa lọc
-              <i className="align-baseline ltr:pl-1 rtl:pr-1 ri-close-line"></i>
-            </button>
+            <div className="lg:col-span-2">
+              <button
+                type="button"
+                className="text-red-500 bg-white btn hover:text-red-500 hover:bg-red-100 focus:text-red-500 focus:bg-red-100 active:text-red-500 active:bg-red-100 dark:bg-zink-700 dark:hover:bg-red-500/10 dark:focus:bg-red-500/10 dark:active:bg-red-500/10"
+                onClick={resetFilters}
+              >
+                Xóa lọc
+                <i className="align-baseline ltr:pl-1 rtl:pr-1 ri-close-line"></i>
+              </button>
+            </div>
             <div className="lg:col-span-2 lg:col-start-11">
               <div className="ltr:lg:text-right rtl:lg:text-left">
                 <Link

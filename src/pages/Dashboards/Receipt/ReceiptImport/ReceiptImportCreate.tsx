@@ -15,8 +15,7 @@ import { createSelector } from "reselect";
 import { Mail, PackageOpen, UserX2, Plus, Trash2 } from "lucide-react";
 import withRouter from "Common/withRouter";
 import ProductListReceiptModal from "../components/ProductListReceiptModal";
-import { Counter } from "Common/Components/Counter";
-import { formatMoney, formatMoneyWithVND } from "helpers/utils";
+import { formatMoneyWithVND } from "helpers/utils";
 import { getSuppliers as onGetSupplierList } from "slices/thunk";
 import { toast, ToastContainer } from "react-toastify";
 import { IHttpResponse } from "types";
@@ -25,6 +24,7 @@ import { Link } from "react-router-dom";
 import { getDate } from "helpers/date";
 import { TimePicker } from "Common/Components/TimePIcker";
 import AsyncPaginatedSelect from "Common/Components/Select/AsyncPaginatedSelect";
+import { ReceiptItem } from "./components/ReceiptItem";
 
 const CreateReceiptImport = (props: any) => {
   const [rows, setRows] = useState<any[]>([
@@ -51,7 +51,7 @@ const CreateReceiptImport = (props: any) => {
 
   const totalAmount = useMemo(() => {
     return rows.reduce((total, row) => {
-      return total + row.quantity * row.price;
+      return total + row.quantity * row.totalPrice;
     }, 0);
   }, [rows]);
 
@@ -73,7 +73,8 @@ const CreateReceiptImport = (props: any) => {
       productName: row.name,
       quantity: row.quantity,
       inventory: row.inventory,
-      costPrice: row.price,
+      costPrice: row.totalPrice,
+      discount: row.discount,
     }));
 
     const payload = {
@@ -184,6 +185,8 @@ const CreateReceiptImport = (props: any) => {
                 quantity: 1,
                 price: item.price,
                 inventory: item.inventory,
+                totalPrice: item.price,
+                discount: 0,
               };
             });
 
@@ -245,7 +248,7 @@ const CreateReceiptImport = (props: any) => {
                       <option value="Kho KH">Kho KH</option>
                     </select>
                     {validation.touched.warehouseLocation &&
-                    validation.errors.warehouseLocation ? (
+                      validation.errors.warehouseLocation ? (
                       <p className="text-red-400">
                         {validation.errors.warehouseLocation}
                       </p>
@@ -291,7 +294,7 @@ const CreateReceiptImport = (props: any) => {
                       }}
                     />
                     {validation.touched.paymentDate &&
-                    validation.errors.paymentDate ? (
+                      validation.errors.paymentDate ? (
                       <p className="text-red-400">
                         {validation.errors.paymentDate}
                       </p>
@@ -316,7 +319,7 @@ const CreateReceiptImport = (props: any) => {
                       }}
                     />
                     {validation.touched.importDate &&
-                    validation.errors.importDate ? (
+                      validation.errors.importDate ? (
                       <p className="text-red-400">
                         {validation.errors.importDate}
                       </p>
@@ -356,7 +359,7 @@ const CreateReceiptImport = (props: any) => {
                       } : null}
                     />
                     {validation.touched.supplier &&
-                    validation.errors.supplier ? (
+                      validation.errors.supplier ? (
                       <p className="text-red-400">
                         {validation.errors.supplier}
                       </p>
@@ -418,6 +421,9 @@ const CreateReceiptImport = (props: any) => {
                               Số lượng
                             </th>
                             <th className="px-3.5 py-2.5 font-semibold text-slate-500 dark:text-zink-200 border-b border-slate-200 dark:border-zink-500">
+                              Chiết khấu (%)
+                            </th>
+                            <th className="px-3.5 py-2.5 font-semibold text-slate-500 dark:text-zink-200 border-b border-slate-200 dark:border-zink-500">
                               Giá nhập
                             </th>
                             <th className="px-3.5 py-2.5 font-semibold text-slate-500 dark:text-zink-200 border-b border-slate-200 dark:border-zink-500"></th>
@@ -425,50 +431,77 @@ const CreateReceiptImport = (props: any) => {
                         </thead>
                         <tbody>
                           {rows.map((row, index) => (
-                            <tr key={row.id}>
-                              <td className="px-3.5 py-2.5 border-b border-slate-200 dark:border-zink-500">
-                                {index + 1}
-                              </td>
-                              <td className="px-3.5 py-2.5 border-b border-slate-200 dark:border-zink-500">
-                                {row.code}
-                              </td>
-                              <td className="px-3.5 py-2.5 border-b border-slate-200 dark:border-zink-500">
-                                <h6 className="mb-1 text-wrap">{row.name}</h6>
-                              </td>
-                              <td className="px-3.5 py-2.5 border-b border-slate-200 dark:border-zink-500">
-                                <Counter
-                                  name="quantity"
-                                  initialValue={row.quantity}
-                                  onCountChange={(value) => {
-                                    setRows((prev) => {
-                                      return prev.map((r) =>
-                                        r.id === row.id
-                                          ? { ...r, quantity: value }
-                                          : r
-                                      );
-                                    });
-                                  }}
-                                />
-                              </td>
-                              <td className="px-3.5 py-2.5 border-b border-slate-200 dark:border-zink-500">
-                                {formatMoney(row.price)}
-                              </td>
-                              <td className="px-3.5 py-2.5 border-b border-slate-200 dark:border-zink-500">
-                                <button
-                                  type="button"
-                                  className="flex items-center justify-center size-8 transition-all duration-200 ease-linear rounded-md bg-slate-100 dark:bg-zink-600 dark:text-zink-200 text-slate-500 hover:text-red-500 dark:hover:text-red-500 hover:bg-red-100 dark:hover:bg-red-500/20"
-                                  onClick={() => {
-                                    setRows((prev) => {
-                                      return prev.filter(
-                                        (r) => r.id !== row.id
-                                      );
-                                    });
-                                  }}
-                                >
-                                  <Trash2 />
-                                </button>
-                              </td>
-                            </tr>
+                            <ReceiptItem
+                              key={row.id}
+                              index={index}
+                              item={row}
+                              onRemove={(id: string) => {
+                                setRows((prev) => {
+                                  return prev.filter((r) => r.id !== id);
+                                });
+                              }}
+                              onUpdate={item => {
+                                console.log({ item });
+                                
+                                setRows((prev) => {
+                                  return prev.map((r) =>
+                                    r.id === item.id
+                                      ? { ...r, ...item }
+                                      : r
+                                  );
+                                });
+                              }}
+                            />
+                            // <tr key={row.id}>
+                            //   <td className="px-3.5 py-2.5 border-b border-slate-200 dark:border-zink-500">
+                            //     {index + 1}
+                            //   </td>
+                            //   <td className="px-3.5 py-2.5 border-b border-slate-200 dark:border-zink-500">
+                            //     {row.code}
+                            //   </td>
+                            //   <td className="px-3.5 py-2.5 border-b border-slate-200 dark:border-zink-500">
+                            //     <h6 className="mb-1 text-wrap">{row.name}</h6>
+                            //   </td>
+                            //   <td className="px-3.5 py-2.5 border-b border-slate-200 dark:border-zink-500">
+                            //     <Counter
+                            //       name="quantity"
+                            //       initialValue={row.quantity}
+                            //       onCountChange={(value) => {
+                            //         setRows((prev) => {
+                            //           return prev.map((r) =>
+                            //             r.id === row.id
+                            //               ? { ...r, quantity: value }
+                            //               : r
+                            //           );
+                            //         });
+                            //       }}
+                            //     />
+                            //   </td>
+                            //   <td className="px-3.5 py-2.5 border-b border-slate-200 dark:border-zink-500">
+                            //     {/* {formatMoney(row.price)} */}
+                            //     <input
+                            //       type="text"
+                            //       id="priceInput"
+                            //       className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
+                            //       placeholder="Giá nhập"
+                            //     />
+                            //   </td>
+                            //   <td className="px-3.5 py-2.5 border-b border-slate-200 dark:border-zink-500">
+                            //     <button
+                            //       type="button"
+                            //       className="flex items-center justify-center size-8 transition-all duration-200 ease-linear rounded-md bg-slate-100 dark:bg-zink-600 dark:text-zink-200 text-slate-500 hover:text-red-500 dark:hover:text-red-500 hover:bg-red-100 dark:hover:bg-red-500/20"
+                            //       onClick={() => {
+                            //         setRows((prev) => {
+                            //           return prev.filter(
+                            //             (r) => r.id !== row.id
+                            //           );
+                            //         });
+                            //       }}
+                            //     >
+                            //       <Trash2 />
+                            //     </button>
+                            //   </td>
+                            // </tr>
                           ))}
                         </tbody>
                       </table>
