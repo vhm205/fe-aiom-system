@@ -25,18 +25,14 @@ import { getProductList as onGetProductList } from "slices/thunk";
 
 import CreateProductModal from "./CreateProductModal";
 import { formatMoney } from "helpers/utils";
-
-const PRODUCT_STATUS = {
-  draft: "draft",
-  active: "active",
-  inactive: "inactive",
-};
+import { PRODUCT_STATUS } from "Common/constants/product-constant";
+import { ProductStatus } from "pages/Dashboards/Product/components/ProductStatus";
 
 const optionsFilterStatus: any = [
   { value: "status", label: "Trạng thái" },
-  { value: PRODUCT_STATUS.draft, label: "Nháp" },
-  { value: PRODUCT_STATUS.active, label: "Hoạt động" },
-  { value: PRODUCT_STATUS.inactive, label: "Không hoạt động" },
+  { value: PRODUCT_STATUS.DRAFT, label: "Nháp" },
+  { value: PRODUCT_STATUS.ACTIVE, label: "Hoạt động" },
+  { value: PRODUCT_STATUS.INACTIVE, label: "Không hoạt động" },
 ];
 
 const PAGE_SIZE = 50;
@@ -48,35 +44,6 @@ interface Props {
   onCancel: () => void;
   onDone?: (items: any) => void;
 }
-
-const Status = ({ item }: any) => {
-  switch (item) {
-    case PRODUCT_STATUS.draft:
-      return (
-        <span className="status px-2.5 py-0.5 inline-block text-xs font-medium rounded border bg-orange-100 border-transparent text-orange-500 dark:bg-orange-500/20 dark:border-transparent">
-          Nháp
-        </span>
-      );
-    case PRODUCT_STATUS.active:
-      return (
-        <span className="status px-2.5 py-0.5 inline-block text-xs font-medium rounded border bg-green-100 border-transparent text-green-500 dark:bg-green-500/20 dark:border-transparent">
-          Hoạt động
-        </span>
-      );
-    case PRODUCT_STATUS.inactive:
-      return (
-        <span className="status px-2.5 py-0.5 inline-block text-xs font-medium rounded border bg-red-100 border-transparent text-red-500 dark:bg-red-500/20 dark:border-transparent">
-          Không hoạt động
-        </span>
-      );
-    default:
-      return (
-        <span className="status px-2.5 py-0.5 inline-block text-xs font-medium rounded border bg-green-100 border-transparent text-green-500 dark:bg-green-500/20 dark:border-transparent">
-          {item}
-        </span>
-      );
-  }
-};
 
 const ProductListReceiptModal: FC<Props> = ({
   selectedItems,
@@ -104,7 +71,6 @@ const ProductListReceiptModal: FC<Props> = ({
 
   useEffect(() => {
     if (!selectedItems || !selectedItems.length) return;
-
     setSelectedRows(selectedItems);
   }, [selectedItems]);
 
@@ -301,6 +267,10 @@ const ProductListReceiptModal: FC<Props> = ({
         accessorKey: "supplier",
         enableColumnFilter: false,
         enableSorting: true,
+        cell: (cell: any) => {
+          const value = cell.getValue();
+          return value?.name ?? ''
+        },
       },
       {
         header: "Mô tả",
@@ -319,7 +289,7 @@ const ProductListReceiptModal: FC<Props> = ({
         accessorKey: "status",
         enableColumnFilter: false,
         enableSorting: true,
-        cell: (cell: any) => <Status item={cell.getValue()} />,
+        cell: (cell: any) => <ProductStatus status={cell.getValue()} />,
       },
     ],
     [selectedRows]

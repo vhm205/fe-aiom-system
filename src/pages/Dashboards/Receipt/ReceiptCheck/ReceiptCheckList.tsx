@@ -13,7 +13,6 @@ import {
   RefreshCcw,
   MoreHorizontal,
   Trash2,
-  FileEdit,
   Eye,
 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -30,7 +29,6 @@ import {
   deleteReceiptCheck as onDeleteReceipt,
   getReceiptCheckByReceiptNumber as onGetReceiptByCode,
 } from "slices/thunk";
-import { ToastContainer } from "react-toastify";
 import { PaginationState } from "@tanstack/react-table";
 import TableCustom from "Common/TableCustom";
 import { formatMoney } from "helpers/utils";
@@ -38,48 +36,8 @@ import PrintMultipleBarcodeModal from "../components/PrintMultipleBarcodeModal";
 import PrintSingleBarcodeModal from "../components/PrintSingleBarcodeModal";
 import { TimePicker } from "Common/Components/TimePIcker";
 import { getDate } from "helpers/date";
-
-const RECEIPT_STATUS = {
-  PENDING: "pending",
-  PROCESSING: "processing",
-  BALANCING_REQUIRED: "balancing_required",
-  BALANCELLED: "balanced",
-};
-
-const Status = ({ item }: any) => {
-  switch (item) {
-    case RECEIPT_STATUS.PENDING:
-      return (
-        <span className="delivery_status px-2.5 py-0.5 text-xs inline-block font-medium rounded border bg-yellow-100 border-yellow-200 text-yellow-500 dark:bg-yellow-500/20 dark:border-yellow-500/20">
-          Cần xử lý
-        </span>
-      );
-    case RECEIPT_STATUS.PROCESSING:
-      return (
-        <span className="delivery_status px-2.5 py-0.5 text-xs inline-block font-medium rounded border bg-orange-100 border-orange-200 text-orange-500 dark:bg-orange-500/20 dark:border-orange-500/20">
-          Đang xử lý
-        </span>
-      );
-    case RECEIPT_STATUS.BALANCELLED:
-      return (
-        <span className="delivery_status px-2.5 py-0.5 text-xs inline-block font-medium rounded border bg-green-100 border-green-200 text-green-500 dark:bg-green-500/20 dark:border-green-500/20">
-          Đã cân bằng
-        </span>
-      );
-    case RECEIPT_STATUS.BALANCING_REQUIRED:
-      return (
-        <span className="delivery_status px-2.5 py-0.5 text-xs inline-block font-medium rounded border bg-red-100 border-red-200 text-red-500 dark:bg-red-500/20 dark:border-red-500/20">
-          Cần cân đối
-        </span>
-      );
-    default:
-      return (
-        <span className="delivery_status px-2.5 py-0.5 text-xs inline-block font-medium rounded border bg-gray-100 border-gray-200 text-gray-500 dark:bg-gray-500/20 dark:border-gray-500/20">
-          {item}
-        </span>
-      );
-  }
-};
+import { NoTableResult } from "Common/Components/NoTableResult";
+import { ReceiptStatus } from "./components/ReceiptStatus";
 
 const ReceiptCheckList = () => {
   const dispatch = useDispatch<any>();
@@ -256,6 +214,10 @@ const ReceiptCheckList = () => {
         header: "Nhà cung cấp",
         accessorKey: "supplier",
         enableColumnFilter: false,
+        cell: (cell: any) => {
+          const value = cell.getValue();
+          return value?.name ?? ''
+        },
       },
       {
         header: "Tồn hệ thống",
@@ -302,11 +264,7 @@ const ReceiptCheckList = () => {
         enableColumnFilter: false,
         cell: (cell: any) => {
           const checker = cell.getValue();
-          return (
-            <>
-              {checker.fullname}
-            </>
-          );
+          return checker.fullname;
         }
       },
       {
@@ -314,7 +272,7 @@ const ReceiptCheckList = () => {
         accessorKey: "status",
         enableColumnFilter: false,
         enableSorting: true,
-        cell: (cell: any) => <Status item={cell.getValue()} />,
+        cell: (cell: any) => <ReceiptStatus status={cell.getValue()} />,
       },
       {
         header: "Action",
@@ -360,7 +318,7 @@ const ReceiptCheckList = () => {
                   <span className="align-middle">In tem mã</span>
                 </a>
               </li>
-              <li>
+              {/* <li>
                 <Link
                   to={`/receipt-check/update?id=${cell.row.original.id}`}
                   data-modal-target="addOrderModal"
@@ -369,7 +327,7 @@ const ReceiptCheckList = () => {
                   <FileEdit className="inline-block size-3 ltr:mr-1 rtl:ml-1" />{" "}
                   <span className="align-middle">Cập nhật</span>
                 </Link>
-              </li>
+              </li> */}
               <li>
                 <Link
                   to="#!"
@@ -415,8 +373,6 @@ const ReceiptCheckList = () => {
           />
         )
       ) : null}
-
-      <ToastContainer closeButton={false} limit={1} />
 
       <div className="card" id="receiptsTable">
         <div className="card-body">
@@ -563,15 +519,7 @@ const ReceiptCheckList = () => {
               PaginationClassName="flex flex-col items-center mt-5 md:flex-row"
             />
           ) : (
-            <div className="noresult">
-              <div className="py-6 text-center">
-                <Search className="size-6 mx-auto text-sky-500 fill-sky-100 dark:sky-500/20" />
-                <h5 className="mt-2 mb-1">Không tìm thấy kết quả</h5>
-                <p className="mb-0 text-slate-500 dark:text-zink-200">
-                  Dữ liệu không tìm thấy. Bạn có thể thử lại.
-                </p>
-              </div>
-            </div>
+            <NoTableResult />
           )}
         </div>
       </div>

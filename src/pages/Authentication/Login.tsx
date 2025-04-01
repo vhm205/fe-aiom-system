@@ -15,7 +15,6 @@ import withRouter from "Common/withRouter";
 import { createSelector } from "reselect";
 import AuthIcon from "pages/AuthenticationInner/AuthIcon";
 import { Link } from "react-router-dom";
-import { ToastContainer } from "react-toastify";
 
 const Login = (props: any) => {
 
@@ -87,7 +86,6 @@ const Login = (props: any) => {
     <React.Fragment>
       <div className="relative">
         <AuthIcon />
-        <ToastContainer closeButton={false} limit={1} />
 
         <div className="mb-0 w-screen lg:mx-auto lg:w-[500px] card shadow-lg border-none shadow-slate-100 relative">
           <div className="!px-10 !py-12 card-body">

@@ -12,16 +12,19 @@ import RegisterReducer from "./auth/register/reducer";
 // userProfile
 import ProfileReducer from "./auth/profile/reducer";
 
-// User Management Reducer
+// User Reducer
 import UserReducer from "./users/reducer";
 
-// Product Management Reducer
+// Product Reducer
 import ProductReducer from "./products/reducer";
 
-// Receipt Management Reducer
+// Receipt Reducer
 import ReceiptImportReducer from "./receipt-import/reducer";
 import ReceiptReturnReducer from "./receipt-return/reducer";
 import ReceiptCheckReducer from "./receipt-check/reducer";
+
+// Supplier Reducer
+import SupplierReducer from "./supplier/reducer";
 
 const rootReducer = combineReducers({
   Layout: LayoutReducer,
@@ -33,6 +36,7 @@ const rootReducer = combineReducers({
   ReceiptImport: ReceiptImportReducer,
   ReceiptReturn: ReceiptReturnReducer,
   ReceiptCheck: ReceiptCheckReducer,
+  Supplier: SupplierReducer,
 });
 
 export type RootState = ReturnType<typeof rootReducer>;

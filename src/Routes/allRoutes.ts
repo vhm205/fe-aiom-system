@@ -2,10 +2,8 @@
 import UserProfile from "pages/Authentication/UserProfile";
 import Login from "pages/Authentication/Login";
 import Logout from "pages/Authentication/LogOut";
-// import Register from "pages/Authentication/Register";
 
 // dashboard
-import Ecommerce from "pages/Dashboards/Ecommerce";
 import UserManagement from "pages/Dashboards/User/UserManagement";
 
 // product
@@ -25,6 +23,8 @@ import ReceiptReturnList from "pages/Dashboards/Receipt/ReceiptReturn/ReceiptRet
 import ReceiptCheckCreate from "pages/Dashboards/Receipt/ReceiptCheck/ReceiptCheckCreate";
 import ReceiptCheckUpdate from "pages/Dashboards/Receipt/ReceiptCheck/ReceiptCheckUpdate";
 import ReceiptCheckList from "pages/Dashboards/Receipt/ReceiptCheck/ReceiptCheckList";
+import SupplierList from "pages/Dashboards/Supplier/SupplierList";
+import SupplierDetail from "pages/Dashboards/Supplier/SupplierDetail";
 
 interface RouteObject {
   path: string;
@@ -34,8 +34,7 @@ interface RouteObject {
 
 const authProtectedRoutes: Array<RouteObject> = [
   // Dashboard
-  { path: "/", component: Ecommerce },
-  { path: "/dashboard", component: Ecommerce },
+  { path: "/", component: Login },
   { path: "/users", component: UserManagement },
 
   // product
@@ -56,15 +55,17 @@ const authProtectedRoutes: Array<RouteObject> = [
   { path: "/receipt-check/update", component: ReceiptCheckUpdate },
   { path: "/receipt-check/list", component: ReceiptCheckList },
 
+  // supplier
+  { path: "/suppliers", component: SupplierList },
+  { path: "/suppliers/:id", component: SupplierDetail },
+
   // profile
   { path: "/user-profile", component: UserProfile },
 ];
 
 const publicRoutes = [
-  // authentication
   { path: "/login", component: Login },
   { path: "/logout", component: Logout },
-  // { path: "/register", component: Register },
 ];
 
 export { authProtectedRoutes, publicRoutes };

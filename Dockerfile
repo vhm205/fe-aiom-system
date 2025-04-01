@@ -11,10 +11,6 @@ ENV REACT_APP_API_VERSION=v1
 ENV REACT_APP_API_URL=https://aios-api.deno.dev/api
 ENV REACT_APP_SERVER_URL=https://aios-api.deno.dev
 
-# RAILWAY
-# ENV REACT_APP_API_URL=https://aiom-api.up.railway.app/api
-# ENV REACT_APP_SERVER_URL=https://aiom-api.up.railway.app
-
 # LOCAL
 # ENV REACT_APP_API_URL_DEV=http://localhost:2005/api
 # ENV REACT_APP_SERVER_URL_DEV=http://localhost:2005

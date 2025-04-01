@@ -33,7 +33,6 @@ import {
   updateUserList as onUpdateUserList,
   deleteUserList as onDeleteUserList,
 } from "slices/thunk";
-import { ToastContainer } from "react-toastify";
 import filterDataBySearch from "Common/filterDataBySearch";
 
 const USER_STATUS = {
@@ -379,7 +378,6 @@ const UserManagement = () => {
         onHide={deleteToggle}
         onDelete={handleDelete}
       />
-      <ToastContainer closeButton={false} limit={1} />
       <div className="grid grid-cols-1 gap-x-5 xl:grid-cols-12">
         <div className="xl:col-span-12">
           <div className="card" id="usersTable">

@@ -12,10 +12,10 @@ import * as Yup from "yup";
 import { useFormik } from "formik";
 
 import {
+  getSuppliersThunk as onGetSupplierList,
   addProductList as onAddProductList,
   updateProductList as onUpdateProductList,
   getCategories as onGetCategoryList,
-  getSuppliers as onGetSupplierList,
   getUnits as onGetUnitList,
 } from "slices/thunk";
 import { formatMoneyWithVND } from "helpers/utils";
@@ -65,7 +65,7 @@ const CreateProductModal: FC<props> = memo(
 
     useEffect(() => {
       dispatch(onGetCategoryList());
-      dispatch(onGetSupplierList());
+      dispatch(onGetSupplierList({}));
       dispatch(onGetUnitList());
     }, [dispatch]);
 

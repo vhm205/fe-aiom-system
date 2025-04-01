@@ -17,7 +17,7 @@ import { Counter } from "Common/Components/Counter";
 import { formatMoney, formatMoneyWithVND } from "helpers/utils";
 import withRouter from "Common/withRouter";
 import {
-  getSuppliers as onGetSupplierList,
+  getSuppliersThunk as onGetSupplierList,
   getReceiptImportInfo as onGetReceiptImportInfo,
 } from "slices/thunk";
 import { toast, ToastContainer } from "react-toastify";
@@ -27,6 +27,7 @@ import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { TimePicker } from "Common/Components/TimePIcker";
 import { getDate } from "helpers/date";
 import AsyncPaginatedSelect from "Common/Components/Select/AsyncPaginatedSelect";
+import { createSupplier } from "apis/supplier";
 
 const UpdateReceiptCheck = (props: any) => {
   const [searchParams] = useSearchParams();
@@ -56,7 +57,7 @@ const UpdateReceiptCheck = (props: any) => {
   const { receiptInfo, receiptItems } = useSelector(selectDataReceipt);
 
   useEffect(() => {
-    dispatch(onGetSupplierList());
+    dispatch(onGetSupplierList({}));
   }, [dispatch]);
 
   useEffect(() => {
@@ -161,6 +162,14 @@ const UpdateReceiptCheck = (props: any) => {
     }),
     onSubmit: handleSubmitForm,
   });
+
+  const handleCreateSupplier = async (name: string) => {
+    const result = await createSupplier({ name });
+    return {
+      value: result.id,
+      label: name,
+    };
+  };
 
   const handleLoadSupplier = async (inputValue: string, page: number) => {
     try {
@@ -372,12 +381,7 @@ const UpdateReceiptCheck = (props: any) => {
                       placeholder="Chọn"
                       debounceTimeout={500}
                       noOptionsMessage={() => "Không thấy nhà cung cấp"}
-                      createOption={(value) =>
-                        Promise.resolve({
-                          value,
-                          label: value,
-                        })
-                      }
+                      createOption={handleCreateSupplier}
                       onChange={(option) => {
                         if (option) {
                           validation.setFieldValue("supplier", option.value);

@@ -10,6 +10,6 @@ export const convertToUTC = (date: Date) => {
   return dayjs.utc(date);
 }
 
-export const getDate = (date: Date | string) => {
+export const getDate = (date: Date | string = new Date()) => {
   return dayjs(date);
 }

@@ -105,7 +105,7 @@ export class HttpRequest {
           window.location.replace("/login");
         }
 
-        return data;
+        return error;
       },
     );
 

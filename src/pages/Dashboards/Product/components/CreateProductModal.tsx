@@ -1,4 +1,10 @@
-import React, { FC, memo, useEffect, useMemo, useState } from "react";
+import React, {
+  FC,
+  memo,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import Modal from "Common/Components/Modal";
 import { Loader2 } from "lucide-react";
 import CreatableSelect from "react-select/creatable";
@@ -12,13 +18,16 @@ import * as Yup from "yup";
 import { useFormik } from "formik";
 
 import {
+  getSuppliersThunk as onGetSupplierList,
+  getCategories as onGetCategoryList,
   addProductList as onAddProductList,
   updateProductList as onUpdateProductList,
-  getCategories as onGetCategoryList,
-  getSuppliers as onGetSupplierList,
   getUnits as onGetUnitList,
 } from "slices/thunk";
+
 import { formatMoneyWithVND } from "helpers/utils";
+import { toast } from "react-toastify";
+import { createSupplier } from "apis/supplier";
 
 interface Option {
   readonly label: string;
@@ -51,21 +60,27 @@ const CreateProductModal: FC<props> = memo(
 
     const dispatch = useDispatch<any>();
 
-    const selectDataList = createSelector(
+    const selectProductData = createSelector(
       (state: any) => state.Products,
       (state) => ({
         categoryList: state.categoryList || [],
-        supplierList: state.supplierList || [],
         unitList: state.unitList || [],
       })
     );
 
-    const { categoryList, supplierList, unitList } =
-      useSelector(selectDataList);
+    const selectSupplierData = createSelector(
+      (state: any) => state.Supplier,
+      (state) => ({
+        supplierList: state.suppliers || [],
+      })
+    );
+
+    const { categoryList, unitList } = useSelector(selectProductData);
+    const { supplierList } = useSelector(selectSupplierData);
 
     useEffect(() => {
+      dispatch(onGetSupplierList({}));
       dispatch(onGetCategoryList());
-      dispatch(onGetSupplierList());
       dispatch(onGetUnitList());
     }, [dispatch]);
 
@@ -74,35 +89,56 @@ const CreateProductModal: FC<props> = memo(
     }, [defaultData]);
 
     useEffect(() => {
-      if (isEdit) {
-        setCategory({
-          label: defaultData.category,
-          value: defaultData.category,
-        });
-        setSupplier({
-          label: defaultData.supplier,
-          value: defaultData.supplier,
-        });
-        setUnit({
-          label: defaultData.unit,
-          value: defaultData.unit,
-        });
-        setFormattedMoney({
-          sellingPrice: defaultData
-            ? formatMoneyWithVND(+defaultData.sellingPrice)
-            : 0,
-          costPrice: defaultData
-            ? formatMoneyWithVND(+defaultData.costPrice)
-            : 0,
-        });
-      } else {
-        setCategory(undefined);
-        setSupplier(undefined);
-        setUnit(undefined);
-      }
+      const fetchDetailData = async () => {
+        if (isEdit) {
+          const { supplier, category, unit, sellingPrice, costPrice } = defaultData;
+
+          if (supplier) {
+            setSupplier({
+              label: supplier.name,
+              value: supplier.id,
+            });
+          }
+
+          setCategory({
+            label: category,
+            value: category,
+          });
+          setUnit({
+            label: unit,
+            value: unit,
+          });
+          setFormattedMoney({
+            sellingPrice: sellingPrice
+              ? formatMoneyWithVND(+sellingPrice)
+              : 0,
+            costPrice: costPrice
+              ? formatMoneyWithVND(+costPrice)
+              : 0,
+          });
+        } else {
+          setCategory(undefined);
+          setSupplier(undefined);
+          setUnit(undefined);
+        }
+      };
+
+      fetchDetailData();
     }, [isEdit, defaultData]);
 
     const handleClose = () => onCancel();
+
+    const handleCreateSupplier = async (name: string) => {
+      try {
+        const result = await createSupplier({ name });
+        setSupplier({
+          label: name,
+          value: result?.id,
+        });
+      } catch (error: any) {
+        toast.error(error.message);
+      }
+    };
 
     const handleCreateProduct = async (values: any) => {
       setButtonLoading(true);
@@ -112,15 +148,12 @@ const CreateProductModal: FC<props> = memo(
           id: defaultData.id,
           ...values,
         };
-        // update
         dispatch(onUpdateProductList(dataUpdate));
       } else {
-        // save new
         dispatch(onAddProductList({ ...values }));
       }
 
       setButtonLoading(false);
-
       handleClose();
       resetForm();
       onDone?.();
@@ -148,7 +181,7 @@ const CreateProductModal: FC<props> = memo(
         inventory: (defaultData && defaultData.inventory) || "",
         unit: (defaultData && defaultData.unit) || "",
         category: (defaultData && defaultData.category) || "",
-        supplier: (defaultData && defaultData.supplier) || "",
+        supplier: (defaultData && defaultData.supplier?.id) || "",
         additionalDescription:
           (defaultData && defaultData.additionalDescription) || "",
         warehouseLocation:
@@ -384,10 +417,11 @@ const CreateProductModal: FC<props> = memo(
                               setSupplier(newValue);
                             }}
                             value={supplier || ""}
-                            options={supplierList.map((supplier: string) => ({
-                              label: supplier,
-                              value: supplier,
+                            options={supplierList.map((supplier: any) => ({
+                              label: supplier.name,
+                              value: supplier.id,
                             }))}
+                            onCreateOption={handleCreateSupplier}
                           />
                           {validation.touched.supplier &&
                           validation.errors.supplier ? (

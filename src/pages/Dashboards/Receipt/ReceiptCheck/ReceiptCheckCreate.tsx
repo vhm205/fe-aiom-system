@@ -3,15 +3,16 @@ import BreadCrumb from "Common/BreadCrumb";
 import Barcode from "react-barcode";
 import dayjs from "dayjs";
 import { Link } from "react-router-dom";
-import { toast, ToastContainer } from "react-toastify";
 import * as Yup from "yup";
 import { useFormik } from "formik";
 import { useDispatch, useSelector } from "react-redux";
 import { createSelector } from "reselect";
 
+import { toast } from "react-toastify";
+
 // Slices
 import {
-  getSuppliers as onGetSupplierList,
+  getSuppliersThunk as onGetSupplierList,
   getUserList as onGetUserList,
 } from "slices/thunk";
 
@@ -29,6 +30,7 @@ import withRouter from "Common/withRouter";
 import { TimePicker } from "Common/Components/TimePIcker";
 import AsyncPaginatedSelect from "Common/Components/Select/AsyncPaginatedSelect";
 import ProductListReceiptModal from "../components/ProductListReceiptModal";
+import { createSupplier } from "apis/supplier";
 
 const CreateReceiptCheck = (props: any) => {
   const [rows, setRows] = useState<any[]>([]);
@@ -48,9 +50,9 @@ const CreateReceiptCheck = (props: any) => {
   );
 
   const supplierSelector = createSelector(
-    (state: any) => state.Products,
+    (state: any) => state.Supplier,
     (state) => ({
-      supplierList: state.supplierList || [],
+      supplierList: state.suppliers || [],
     })
   );
 
@@ -59,7 +61,7 @@ const CreateReceiptCheck = (props: any) => {
 
   useEffect(() => {
     dispatch(onGetUserList({}));
-    dispatch(onGetSupplierList());
+    dispatch(onGetSupplierList({}));
   }, [dispatch]);
 
   const totalAmount = useMemo(() => {
@@ -87,7 +89,7 @@ const CreateReceiptCheck = (props: any) => {
       date: getDate(values.date).format(),
       note: values.note,
       periodic: values.periodic,
-      supplier: values.supplier,
+      supplier: values.supplier?.id,
       checker: values.checker,
       items,
     };
@@ -100,7 +102,7 @@ const CreateReceiptCheck = (props: any) => {
 
       if (response.statusCode !== 201) {
         toast.warn(response.message);
-        return;
+        return '';
       }
 
       toast.success("Tạo phiếu thành công");
@@ -114,23 +116,30 @@ const CreateReceiptCheck = (props: any) => {
   };
 
   const validation: any = useFormik({
-    // enableReinitialize : use this flag when initial values needs to be changed
     enableReinitialize: false,
 
     initialValues: {
       date: "",
-      supplier: "",
+      supplier: null,
       periodic: "",
-      checker: "",
+      checker: null,
     },
     validationSchema: Yup.object({
+      supplier: Yup.object({ id: Yup.string(), name: Yup.string() }).required("Vui lòng chọn nhà cung cấp"),
       date: Yup.string().required("Vui lòng chọn ngày kiểm hàng"),
-      supplier: Yup.string().required("Vui lòng chọn nhà cung cấp"),
       periodic: Yup.string().required("Vui lòng chọn đợt kiểm"),
       checker: Yup.string().required("Vui lòng chọn người kiểm"),
     }),
     onSubmit: handleSubmitForm,
   });
+
+  const handleCreateSupplier = async (name: string) => {
+    const result = await createSupplier({ name });
+    return {
+      value: result.id,
+      label: name,
+    };
+  };
 
   const handleLoadSuppliers = async (inputValue: string, page: number) => {
     try {
@@ -148,9 +157,9 @@ const CreateReceiptCheck = (props: any) => {
       const { data, metadata } = response;
 
       return {
-        results: data?.map((item: string) => ({
-          value: item,
-          label: item,
+        results: data?.map((item: Record<string, string>) => ({
+          value: item.id,
+          label: item.name,
         })),
         hasMore: metadata?.hasNext,
         page: metadata?.currentPage,
@@ -226,7 +235,7 @@ const CreateReceiptCheck = (props: any) => {
           });
         }}
       />
-      <ToastContainer closeButton={false} limit={1} />
+      {/* <ToastContainer closeButton={false} limit={1} /> */}
       <BreadCrumb title="Tạo mới phiếu kiểm" pageTitle="Products" />
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-x-5">
         <div className="xl:col-span-9">
@@ -350,7 +359,7 @@ const CreateReceiptCheck = (props: any) => {
                     </label>
                     <AsyncPaginatedSelect
                       loadOptions={handleLoadUsers}
-                      defaultOptions={userList.map((user: any) => ({
+                      defaultOptions={userList.map((user: Record<string, string>) => ({
                         label: user.fullname,
                         value: user.id,
                       }))}
@@ -379,28 +388,32 @@ const CreateReceiptCheck = (props: any) => {
                     </label>
                     <AsyncPaginatedSelect
                       loadOptions={handleLoadSuppliers}
-                      defaultOptions={supplierList.map((supplier: string) => ({
-                        label: supplier,
-                        value: supplier,
-                      }))}
+                      defaultOptions={supplierList.map(
+                        (supplier: Record<string, string>) => ({
+                          label: supplier.name,
+                          value: supplier.id,
+                        })
+                      )}
                       placeholder="Chọn nhà cung cấp"
                       debounceTimeout={500}
                       noOptionsMessage={() => "Không thấy nhà cung cấp"}
-                      createOption={(value) =>
-                        Promise.resolve({
-                          value,
-                          label: value,
-                        })
-                      }
+                      createOption={handleCreateSupplier}
                       onChange={(option) => {
                         if (option) {
-                          validation.setFieldValue("supplier", option.value);
+                          validation.setFieldValue("supplier", {
+                            id: option.value,
+                            name: option.label,
+                          });
                         }
                       }}
-                      value={validation.values.supplier ? {
-                        label: validation.values?.supplier,
-                        value: validation.values?.supplier,
-                      } : null}
+                      value={
+                        validation.values.supplier
+                          ? {
+                              label: validation.values?.supplier?.name,
+                              value: validation.values?.supplier?.id,
+                            }
+                          : null
+                      }
                     />
                     {validation.touched.supplier &&
                     validation.errors.supplier ? (
