@@ -83,21 +83,28 @@ const menuData: any = [
       },
       {
         id: "receipt-check-page",
-        label: "Kiểm kho",
+        label: "Quản lý kho",
         link: "/#",
         parentId: "product-dashboard",
         subItems: [
-          {
-            id: "create-receipt-check-page",
-            label: "Tạo phiếu kiểm",
-            link: "/receipt-check/create",
-            parentId: "product-dashboard",
-          },
           {
             id: "list-receipt-check-page",
             label: "Danh sách phiếu kiểm",
             link: "/receipt-check/list",
             parentId: "product-dashboard",
+          },
+          {
+            id: "analysis-receipt-check-page",
+            label: "Phân tích kho",
+            link: "/receipt-check/analysis-inventory",
+            parentId: "product-dashboard",
+          },
+          {
+            id: "create-receipt-check-page",
+            label: "Tạo phiếu kiểm",
+            link: "/receipt-check/create",
+            parentId: "product-dashboard",
+            isHide: true,
           },
           {
             id: "update-receipt-check-page",

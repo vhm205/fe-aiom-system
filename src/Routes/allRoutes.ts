@@ -23,8 +23,13 @@ import ReceiptReturnList from "pages/Dashboards/Receipt/ReceiptReturn/ReceiptRet
 import ReceiptCheckCreate from "pages/Dashboards/Receipt/ReceiptCheck/ReceiptCheckCreate";
 import ReceiptCheckUpdate from "pages/Dashboards/Receipt/ReceiptCheck/ReceiptCheckUpdate";
 import ReceiptCheckList from "pages/Dashboards/Receipt/ReceiptCheck/ReceiptCheckList";
+
+// supplier
 import SupplierList from "pages/Dashboards/Supplier/SupplierList";
 import SupplierDetail from "pages/Dashboards/Supplier/SupplierDetail";
+
+// analytics
+import AnalyticsReport from "pages/Dashboards/Inventory/AnalysisReport";
 
 interface RouteObject {
   path: string;
@@ -54,6 +59,7 @@ const authProtectedRoutes: Array<RouteObject> = [
   { path: "/receipt-check/create", component: ReceiptCheckCreate },
   { path: "/receipt-check/update", component: ReceiptCheckUpdate },
   { path: "/receipt-check/list", component: ReceiptCheckList },
+  { path: "/receipt-check/analysis-inventory", component: AnalyticsReport },
 
   // supplier
   { path: "/suppliers", component: SupplierList },
