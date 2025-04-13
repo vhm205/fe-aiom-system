@@ -263,23 +263,24 @@ const ProductList = () => {
       },
       {
         header: "Nhà cung cấp",
-        accessorKey: "supplier",
+        accessorKey: "suppliers",
         enableColumnFilter: false,
         enableSorting: true,
         cell: (cell: any) => {
           const value = cell.getValue();
-          return value?.name ?? ''
+          const supplier = value.map((supplier: any) => supplier.name).join(', ')
+          return supplier;
         },
       },
       {
         header: "Mô tả",
-        accessorKey: "additionalDescription",
+        accessorKey: "description",
         enableColumnFilter: false,
         enableSorting: true,
       },
       {
         header: "Cửa hàng",
-        accessorKey: "warehouseLocation",
+        accessorKey: "warehouse",
         enableColumnFilter: false,
         enableSorting: true,
       },

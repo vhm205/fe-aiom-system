@@ -18,6 +18,65 @@ interface PaginationMetadata {
 
 const ITEMS_PER_PAGE = 10;
 
+// Chart options
+const options = {
+  chart: {
+    type: "bar" as const,
+    height: 450,
+    toolbar: {
+      show: false,
+    },
+  },
+  plotOptions: {
+    bar: {
+      horizontal: true,
+      barHeight: "70%",
+      distributed: true,
+    },
+  },
+  dataLabels: {
+    enabled: true,
+    formatter: function (value: number) {
+      return value.toFixed(2) + " lần";
+    },
+    style: {
+      fontSize: "12px",
+    },
+  },
+  xaxis: {
+    // categories: turnoverData.map((item) => item.product),
+    labels: {
+      style: {
+        fontSize: "12px",
+      },
+    },
+    title: {
+      text: "Vòng quay tồn kho (lần)",
+    },
+  },
+  yaxis: {
+    labels: {
+      style: {
+        fontSize: "12px",
+      },
+    },
+  },
+  colors: ["#3B82F6", "#8B5CF6", "#EC4899", "#F59E0B", "#10B981"],
+  legend: {
+    show: false,
+  },
+  tooltip: {
+    theme: document.documentElement.classList.contains("dark")
+      ? "dark"
+      : "light",
+    y: {
+      formatter: function (value: number) {
+        return value.toFixed(2) + " lần";
+      },
+    },
+  },
+};
+
 export const InventoryTurnover: FC = () => {
   const [turnoverData, setTurnoverData] = useState<InventoryTurnoverData[]>([]);
   const [paginationMeta, setPaginationMeta] = useState<PaginationMetadata>({
@@ -26,65 +85,6 @@ export const InventoryTurnover: FC = () => {
     totalItems: 0,
     totalPages: 0,
   });
-
-  // Chart options
-  const options = {
-    chart: {
-      type: "bar" as const,
-      height: 450,
-      toolbar: {
-        show: false,
-      },
-    },
-    plotOptions: {
-      bar: {
-        horizontal: true,
-        barHeight: "70%",
-        distributed: true,
-      },
-    },
-    dataLabels: {
-      enabled: true,
-      formatter: function (value: number) {
-        return value.toFixed(2) + " lần";
-      },
-      style: {
-        fontSize: "12px",
-      },
-    },
-    xaxis: {
-      // categories: turnoverData.map((item) => item.product),
-      labels: {
-        style: {
-          fontSize: "12px",
-        },
-      },
-      title: {
-        text: "Vòng quay tồn kho (lần)",
-      },
-    },
-    yaxis: {
-      labels: {
-        style: {
-          fontSize: "12px",
-        },
-      },
-    },
-    colors: ["#3B82F6", "#8B5CF6", "#EC4899", "#F59E0B", "#10B981"],
-    legend: {
-      show: false,
-    },
-    tooltip: {
-      theme: document.documentElement.classList.contains("dark")
-        ? "dark"
-        : "light",
-      y: {
-        formatter: function (value: number) {
-          return value.toFixed(2) + " lần";
-        },
-      },
-    },
-  };
 
   const fetchTurnoverData = useCallback(async () => {
     try {

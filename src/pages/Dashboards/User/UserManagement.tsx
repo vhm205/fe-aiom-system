@@ -34,6 +34,7 @@ import {
   deleteUserList as onDeleteUserList,
 } from "slices/thunk";
 import filterDataBySearch from "Common/filterDataBySearch";
+import { toast } from "react-toastify";
 
 const USER_STATUS = {
   active: "active",
@@ -109,16 +110,15 @@ const UserManagement = () => {
       fullname: (eventData && eventData.fullname) || "",
       phone: (eventData && eventData.phone) || "",
       username: (eventData && eventData.username) || "",
-      password: (eventData && eventData.password) || "",
       storeCode: (eventData && eventData.storeCode) || "",
       status: (eventData && eventData.status) || USER_STATUS.active,
       role: (eventData && eventData.role) || "",
+      password: "",
     },
     validationSchema: Yup.object({
       fullname: Yup.string().required("Vui lòng nhập họ và tên"),
       phone: Yup.string().required("Vui lòng nhập số điện thoại"),
       username: Yup.string().required("Vui lòng nhập tên đăng nhập"),
-      password: Yup.string().required("Vui lòng nhập mật khẩu"),
       storeCode: Yup.string().required("Vui lòng chọn chi nhánh"),
       status: Yup.string().required("Vui lòng chọn trạng thái"),
       role: Yup.string().required("Vui lòng chọn chức vụ"),
@@ -133,6 +133,12 @@ const UserManagement = () => {
         // update user
         dispatch(onUpdateUserList(updateUser));
       } else {
+
+        if (!values.password) {
+          toast.warn("Vui lòng nhập mật khẩu");
+          return;
+        }
+
         const newUser = {
           ...values,
         };
@@ -145,19 +151,6 @@ const UserManagement = () => {
 
   // Image
   const [, setSelectedImage] = useState<any>();
-
-  // const handleImageChange = (event: any) => {
-  //     const fileInput = event.target;
-  //     if (fileInput.files && fileInput.files.length > 0) {
-  //         const file = fileInput.files[0];
-  //         const reader = new FileReader();
-  //         reader.onload = (e: any) => {
-  //             validation.setFieldValue('img', e.target.result);
-  //             setSelectedImage(e.target.result);
-  //         };
-  //         reader.readAsDataURL(file);
-  //     }
-  // };
 
   const toggle = useCallback(() => {
     if (show) {
@@ -676,14 +669,14 @@ const UserManagement = () => {
                 name="role"
                 onChange={validation.handleChange}
                 value={validation.values.role || ""}
-                disabled={validation.values.role === "supervisor"}
+                disabled={validation.values.role === "admin"}
               >
                 <option value="">Chức vụ</option>
-                {validation.values.role === "supervisor" && (
-                  <option value="supervisor">supervisor</option>
+                {validation.values.role === "admin" && (
+                  <option value="admin">Admin</option>
                 )}
-                <option value="admin">admin</option>
-                <option value="user">user</option>
+                <option value="manager">Manager</option>
+                <option value="employee">Employee</option>
               </select>
               {validation.touched.role && validation.errors.role ? (
                 <p className="text-red-400">{validation.errors.role}</p>

@@ -280,7 +280,7 @@ const ProductListReceiptModal: FC<Props> = ({
       },
       {
         header: "Cửa hàng",
-        accessorKey: "warehouseLocation",
+        accessorKey: "warehouse",
         enableColumnFilter: false,
         enableSorting: true,
       },

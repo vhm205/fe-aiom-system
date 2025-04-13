@@ -91,7 +91,7 @@ const CreateReceiptReturn = (props: any) => {
       status: values.status,
       type: values.type,
       returnDate: getDate(values.returnDate).format(),
-      warehouseLocation: values.warehouseLocation,
+      warehouse: values.warehouse,
       totalProduct: rows.length,
       totalAmount,
       quantity,
@@ -126,7 +126,7 @@ const CreateReceiptReturn = (props: any) => {
       returnDate: "",
       name: "",
       note: "",
-      warehouseLocation: "",
+      warehouse: "",
       supplier: null,
       reason: customerReasons[0],
       status: "draft",
@@ -135,7 +135,7 @@ const CreateReceiptReturn = (props: any) => {
     validationSchema: Yup.object({
       reason: Yup.string().required("Vui lòng nhập lý do"),
       returnDate: Yup.string().required("Vui lòng chọn ngày trả hàng"),
-      warehouseLocation: Yup.string().required("Vui lòng chọn cửa hàng"),
+      warehouse: Yup.string().required("Vui lòng chọn cửa hàng"),
     }),
     onSubmit: handleSubmitForm,
   });
@@ -394,20 +394,20 @@ const CreateReceiptReturn = (props: any) => {
                       className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
                       data-choices
                       data-choices-search-false
-                      name="warehouseLocation"
+                      name="warehouse"
                       id="warehouseLocationSelect"
                       onChange={validation.handleChange}
-                      value={validation.values.warehouseLocation || ""}
+                      value={validation.values.warehouse || ""}
                     >
                       <option value="">Chọn kho</option>
                       <option value="Kho KS1">Kho KS1</option>
                       <option value="Kho KS2">Kho KS2</option>
                       <option value="Kho KH">Kho KH</option>
                     </select>
-                    {validation.touched.warehouseLocation &&
-                    validation.errors.warehouseLocation ? (
+                    {validation.touched.warehouse &&
+                    validation.errors.warehouse ? (
                       <p className="text-red-400">
-                        {validation.errors.warehouseLocation}
+                        {validation.errors.warehouse}
                       </p>
                     ) : null}
                   </div>
