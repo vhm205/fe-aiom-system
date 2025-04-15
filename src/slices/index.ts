@@ -6,9 +6,6 @@ import LayoutReducer from "./layouts/reducer";
 // login
 import LoginReducer from "./auth/login/reducer";
 
-// register
-import RegisterReducer from "./auth/register/reducer";
-
 // userProfile
 import ProfileReducer from "./auth/profile/reducer";
 
@@ -29,7 +26,6 @@ import SupplierReducer from "./supplier/reducer";
 const rootReducer = combineReducers({
   Layout: LayoutReducer,
   Login: LoginReducer,
-  Register: RegisterReducer,
   Profile: ProfileReducer,
   Users: UserReducer,
   Products: ProductReducer,

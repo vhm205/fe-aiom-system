@@ -296,29 +296,29 @@ const ProductList = () => {
         enableColumnFilter: false,
         enableSorting: true,
         cell: (cell: any) => (
-          <Dropdown className="relative dropdown">
+          <Dropdown className={`relative dropdown-product-action ${cell.row.index >= 7 ? 'dropdown-bottom' : ''}`}>
             <Dropdown.Trigger
               className="flex items-center justify-center size-[30px] dropdown-toggle p-0 text-slate-500 btn bg-slate-100 hover:text-white hover:bg-slate-600 focus:text-white focus:bg-slate-600 focus:ring focus:ring-slate-100 active:text-white active:bg-slate-600 active:ring active:ring-slate-100 dark:bg-slate-500/20 dark:text-slate-400 dark:hover:bg-slate-500 dark:hover:text-white dark:focus:bg-slate-500 dark:focus:text-white dark:active:bg-slate-500 dark:active:text-white dark:ring-slate-400/20"
-              id="productAction1"
+              id={`productAction${cell.row.index}`}
               data-bs-toggle="dropdown"
             >
               <MoreHorizontal className="size-3" />
             </Dropdown.Trigger>
             <Dropdown.Content
-              placement={cell.row.index ? "top-end" : "right-end"}
-              className="absolute z-50 py-2 mt-1 ltr:text-left rtl:text-right list-none bg-white rounded-md shadow-md dropdown-menu min-w-[10rem] dark:bg-zink-600"
-              aria-labelledby="productAction1"
+              placement="right-end"
+              className="absolute z-[1001] py-2 px-1 ltr:text-left rtl:text-right list-none bg-white rounded-md shadow-lg border border-slate-200 dropdown-menu min-w-[10rem] dark:bg-zink-600 dark:border-zink-500"
+              aria-labelledby={`productAction${cell.row.index}`}
             >
               <li>
                 <a
                   href="#!"
-                  className="block px-4 py-1.5 text-base transition-all duration-200 ease-linear text-slate-600 dropdown-item hover:bg-slate-100 hover:text-slate-500 focus:bg-slate-100 focus:text-slate-500 dark:text-zink-100 dark:hover:bg-zink-500 dark:hover:text-zink-200 dark:focus:bg-zink-500 dark:focus:text-zink-200"
+                  className="block px-4 py-2 text-base transition-all duration-200 ease-linear text-slate-600 dropdown-item hover:bg-slate-100 hover:text-slate-500 focus:bg-slate-100 focus:text-slate-500 dark:text-zink-100 dark:hover:bg-zink-500 dark:hover:text-zink-200 dark:focus:bg-zink-500 dark:focus:text-zink-200 rounded-md mx-1"
                   onClick={() => {
                     const data = cell.row.original;
                     onClickShowBarcode(data);
                   }}
                 >
-                  <Eye className="inline-block size-3 ltr:mr-1 rtl:ml-1" />{" "}
+                  <Eye className="inline-block size-4 ltr:mr-2 rtl:ml-2" />{" "}
                   <span className="align-middle">In tem mã</span>
                 </a>
               </li>
@@ -334,20 +334,20 @@ const ProductList = () => {
               <li>
                 <a
                   href="#!"
-                  className="block px-4 py-1.5 text-base transition-all duration-200 ease-linear text-slate-600 dropdown-item hover:bg-slate-100 hover:text-slate-500 focus:bg-slate-100 focus:text-slate-500 dark:text-zink-100 dark:hover:bg-zink-500 dark:hover:text-zink-200 dark:focus:bg-zink-500 dark:focus:text-zink-200"
+                  className="block px-4 py-2 text-base transition-all duration-200 ease-linear text-slate-600 dropdown-item hover:bg-slate-100 hover:text-slate-500 focus:bg-slate-100 focus:text-slate-500 dark:text-zink-100 dark:hover:bg-zink-500 dark:hover:text-zink-200 dark:focus:bg-zink-500 dark:focus:text-zink-200 rounded-md mx-1"
                   onClick={() => onClickCreateProduct(cell.row.original)}
                 >
-                  <FileEdit className="inline-block size-3 ltr:mr-1 rtl:ml-1" />{" "}
+                  <FileEdit className="inline-block size-4 ltr:mr-2 rtl:ml-2" />{" "}
                   <span className="align-middle">Cập nhật</span>
                 </a>
               </li>
               <li>
                 <Link
-                  className="block px-4 py-1.5 text-base transition-all duration-200 ease-linear text-slate-600 dropdown-item hover:bg-slate-100 hover:text-slate-500 focus:bg-slate-100 focus:text-slate-500 dark:text-zink-100 dark:hover:bg-zink-500 dark:hover:text-zink-200 dark:focus:bg-zink-500 dark:focus:text-zink-200"
+                  className="block px-4 py-2 text-base transition-all duration-200 ease-linear text-slate-600 dropdown-item hover:bg-slate-100 hover:text-slate-500 focus:bg-slate-100 focus:text-slate-500 dark:text-zink-100 dark:hover:bg-zink-500 dark:hover:text-zink-200 dark:focus:bg-zink-500 dark:focus:text-zink-200 rounded-md mx-1"
                   to="#!"
                   onClick={() => onClickDelete(cell.row.original)}
                 >
-                  <Trash2 className="inline-block size-3 ltr:mr-1 rtl:ml-1" />{" "}
+                  <Trash2 className="inline-block size-4 ltr:mr-2 rtl:ml-2" />{" "}
                   <span className="align-middle">Xóa</span>
                 </Link>
               </li>
@@ -456,7 +456,7 @@ const ProductList = () => {
           </div>
         </div>
         {/* List Product */}
-        <div className="!pt-1 card-body">
+        <div className="!pt-1 card-body w-full overflow-x-auto">
           {productList && productList.length > 0 ? (
             <TableCustom
               isPagination={true}
@@ -467,8 +467,8 @@ const ProductList = () => {
               pagination={paginationData}
               setPaginationData={setPaginationData}
               customPageSize={10}
-              divclassName="mt-5"
-              tableclassName="overflow-x-scroll"
+              divclassName="mt-5 w-full overflow-x-auto"
+              tableclassName="w-full overflow-x-auto"
               theadclassName="ltr:text-left rtl:text-right bg-slate-100 dark:bg-zink-600"
               thclassName="px-3.5 py-2.5 font-semibold text-slate-500 border-b border-slate-200 dark:border-zink-500 dark:text-zink-200"
               tdclassName="px-3.5 py-2.5 border-y border-slate-200 dark:border-zink-500"

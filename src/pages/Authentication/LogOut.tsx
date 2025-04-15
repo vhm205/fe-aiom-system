@@ -10,7 +10,6 @@ interface selectLogoutState {
 }
 
 const Logout: React.FC = () => {
-
     const dispatch = useDispatch<any>();
 
     const selectLogout = createSelector(

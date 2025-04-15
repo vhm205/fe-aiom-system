@@ -675,8 +675,8 @@ const UserManagement = () => {
                 {validation.values.role === "admin" && (
                   <option value="admin">Admin</option>
                 )}
-                <option value="manager">Manager</option>
-                <option value="employee">Employee</option>
+                <option value="manager">Quản lý</option>
+                <option value="employee">Nhân viên</option>
               </select>
               {validation.touched.role && validation.errors.role ? (
                 <p className="text-red-400">{validation.errors.role}</p>

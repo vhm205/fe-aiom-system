@@ -2,82 +2,55 @@ import { loginError, loginSuccess, logoutSuccess } from "./reducer";
 import { ThunkAction } from "redux-thunk";
 import { Action, Dispatch } from "redux";
 import { RootState } from "slices";
-import { getFirebaseBackend } from "helpers/firebase_helper";
 import { IHttpResponse } from "types";
 import { request } from "helpers/axios";
 
 interface User {
-  email: string;
+  username: string;
   password: string;
 }
 
 export const loginUser =
   (
-    user: User,
+    payload: User,
     history: any
   ): ThunkAction<void, RootState, unknown, Action<string>> =>
   async (dispatch: Dispatch) => {
     try {
       let response: IHttpResponse | any = await request.post("/auth/login", {
-        username: user.email,
-        password: user.password,
+        username: payload.username,
+        password: payload.password,
       });
 
-      if (response.statusCode !== 200) {
+      if (response.statusCode !== 200 || !response.data) {
         dispatch(loginError(response.message));
         return;
       }
 
-      localStorage.setItem("jwt", response.data.token);
-      localStorage.setItem("authUser", JSON.stringify(response.data.user));
+      const { token, user } = response.data;
 
-      if (response.data) {
-        setTimeout(() => {
-          dispatch(loginSuccess(response));
-          history("/products");
-        }, 500);
-      }
+      localStorage.setItem("jwt", token);
+      localStorage.setItem("authUser", JSON.stringify(user));
+
+      setTimeout(() => {
+        dispatch(loginSuccess(user));
+        history("/products");
+      }, 500);
     } catch (error) {
-      dispatch(loginError(error));
+      dispatch(loginError((error as Error).message));
     }
   };
 
 export const logoutUser = () => async (dispatch: Dispatch) => {
   try {
+    await request.post("/auth/logout");
+
     localStorage.removeItem("jwt");
     localStorage.removeItem("authUser");
 
-    let fireBaseBackend = await getFirebaseBackend();
-
-    if (process.env.REACT_APP_DEFAULTAUTH === "firebase") {
-      const response = fireBaseBackend.logout;
-      dispatch(logoutSuccess(response));
-    } else {
-      dispatch(logoutSuccess(true));
-    }
+    dispatch(logoutSuccess(true))
+    window.location.href = "/login";
   } catch (error) {
     dispatch(loginError(error));
   }
 };
-
-export const socialLogin =
-  (type: any, history: any) => async (dispatch: any) => {
-    try {
-      let response: any;
-
-      if (process.env.REACT_APP_DEFAULTAUTH === "firebase") {
-        const fireBaseBackend = getFirebaseBackend();
-        response = fireBaseBackend.socialLoginUser(type);
-      }
-
-      const socialData = await response;
-
-      if (socialData) {
-        sessionStorage.setItem("authUser", JSON.stringify(socialData));
-        dispatch(loginSuccess(socialData));
-        history("/dashboard");
-      }
-    } catch (error) {
-      dispatch(loginError(error));
-    }
-  };

@@ -7,9 +7,9 @@ import {
   // Mail,
   // MessagesSquare,
   // ShoppingCart,
-  Search,
+  // Search,
+  // User2,
   Settings,
-  User2,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -27,12 +27,12 @@ import logoLight from "assets/images/logo/logo6.png";
 
 //import components
 // import LanguageDropdown from "Common/LanguageDropdown";
+// import NotificationDropdown from "Common/NotificationDropdown";
 import LightDark from "Common/LightDark";
-import NotificationDropdown from "Common/NotificationDropdown";
 import { Dropdown } from "Common/Components/Dropdown";
-import { changeLeftsidebarSizeType } from "slices/thunk";
+import { changeLeftsidebarSizeType, logoutUser } from "slices/thunk";
 
-const Header = ({ handleToggleDrawer, _handleDrawer }: any) => {
+const Header = ({ handleToggleDrawer }: any) => {
   const dispatch = useDispatch<any>();
 
   // react-redux
@@ -135,8 +135,10 @@ const Header = ({ handleToggleDrawer, _handleDrawer }: any) => {
     };
   }, [layoutType, dispatch]);
 
+  const handleLogout = () => dispatch(logoutUser());
+
   const selectProperties = createSelector(
-    (state: any) => state.Profile,
+    (state: any) => state.Login,
     (profile) => ({
       user: profile.user,
     })
@@ -218,7 +220,7 @@ const Header = ({ handleToggleDrawer, _handleDrawer }: any) => {
                 </div> */}
 
                 {/* NotificationDropdown */}
-                <NotificationDropdown />
+                {/* <NotificationDropdown /> */}
 
                 <div className="relative items-center hidden h-header md:flex">
                   <button
@@ -231,7 +233,7 @@ const Header = ({ handleToggleDrawer, _handleDrawer }: any) => {
                   </button>
                 </div>
 
-                <Dropdown className="relative flex items-center h-header">
+                <Dropdown className="relative flex items-center h-header dropdown-profile">
                   <Dropdown.Trigger
                     type="button"
                     className="inline-block p-0 transition-all duration-200 ease-linear bg-topbar rounded-full text-topbar-item dropdown-toggle btn hover:bg-topbar-item-bg-hover hover:text-topbar-item-hover group-data-[topbar=dark]:text-topbar-item-dark group-data-[topbar=dark]:bg-topbar-dark group-data-[topbar=dark]:hover:bg-topbar-item-bg-hover-dark group-data-[topbar=dark]:hover:text-topbar-item-hover-dark group-data-[topbar=brand]:bg-topbar-brand group-data-[topbar=brand]:hover:bg-topbar-item-bg-hover-brand group-data-[topbar=brand]:hover:text-topbar-item-hover-brand group-data-[topbar=dark]:dark:bg-zink-700 group-data-[topbar=dark]:dark:hover:bg-zink-600 group-data-[topbar=brand]:text-topbar-item-brand group-data-[topbar=dark]:dark:hover:text-zink-50 group-data-[topbar=dark]:dark:text-zink-200"
@@ -247,14 +249,14 @@ const Header = ({ handleToggleDrawer, _handleDrawer }: any) => {
                     </div>
                   </Dropdown.Trigger>
                   <Dropdown.Content
-                    placement="right-end"
-                    className="absolute z-50 p-4 ltr:text-left rtl:text-right bg-white rounded-md shadow-md !top-4 dropdown-menu min-w-[14rem] dark:bg-zink-600"
+                    placement="bottom-end"
+                    className="absolute z-[1001] p-4 ltr:text-left rtl:text-right bg-white rounded-md shadow-lg border border-slate-200 dark:border-zink-500 dropdown-menu min-w-[14rem] dark:bg-zink-600"
                     aria-labelledby="dropdownMenuButton"
                   >
                     {/* <h6 className="mb-2 text-sm font-normal text-slate-500 dark:text-zink-300">
                       Welcome to Tailwick
                     </h6> */}
-                    <a href="#!" className="flex gap-3 mb-3">
+                    <div className="flex gap-3 mb-4 px-2">
                       <div className="relative inline-block shrink-0">
                         <div className="rounded bg-slate-100 dark:bg-zink-500">
                           <img
@@ -266,16 +268,16 @@ const Header = ({ handleToggleDrawer, _handleDrawer }: any) => {
                         <span className="-top-1 ltr:-right-1 rtl:-left-1 absolute size-2.5 bg-green-400 border-2 border-white rounded-full dark:border-zink-600"></span>
                       </div>
                       <div>
-                        <h6 className="mb-1 text-15">
-                          {user.username || "Staff"}
+                        <h6 className="mb-1 text-15 font-semibold">
+                          {user.fullname || user.username}
                         </h6>
                         <p className="text-slate-500 dark:text-zink-300">
-                          CEO & Founder
+                          {user.role || "Anonymous"}
                         </p>
                       </div>
-                    </a>
+                    </div>
                     <ul>
-                      <li>
+                      {/* <li>
                         <a
                           className="block ltr:pr-4 rtl:pl-4 py-1.5 text-base font-medium transition-all duration-200 ease-linear text-slate-600 dropdown-item hover:text-custom-500 focus:text-custom-500 dark:text-zink-200 dark:hover:text-custom-500 dark:focus:text-custom-500"
                           href={process.env.PUBLIC_URL + "/user-profile"}
@@ -283,7 +285,7 @@ const Header = ({ handleToggleDrawer, _handleDrawer }: any) => {
                           <User2 className="inline-block size-4 ltr:mr-2 rtl:ml-2"></User2>{" "}
                           Profile
                         </a>
-                      </li>
+                      </li> */}
                       {/* <li>
                         <a
                           className="block ltr:pr-4 rtl:pl-4 py-1.5 text-base font-medium transition-all duration-200 ease-linear text-slate-600 dropdown-item hover:text-custom-500 focus:text-custom-500 dark:text-zink-200 dark:hover:text-custom-500 dark:focus:text-custom-500"
@@ -319,11 +321,13 @@ const Header = ({ handleToggleDrawer, _handleDrawer }: any) => {
                       </li> */}
                       <li className="pt-2 mt-2 border-t border-slate-200 dark:border-zink-500">
                         <a
-                          className="block ltr:pr-4 rtl:pl-4 py-1.5 text-base font-medium transition-all duration-200 ease-linear text-slate-600 dropdown-item hover:text-custom-500 focus:text-custom-500 dark:text-zink-200 dark:hover:text-custom-500 dark:focus:text-custom-500"
-                          href={process.env.PUBLIC_URL + "/logout"}
+                          className="block px-4 py-2.5 text-base font-medium transition-all duration-200 ease-linear text-slate-600 dropdown-item hover:text-custom-500 hover:bg-slate-100 focus:text-custom-500 dark:text-zink-200 dark:hover:text-custom-500 dark:hover:bg-zink-500 dark:focus:text-custom-500 rounded-md mx-1"
+                          // href={process.env.PUBLIC_URL + "/logout"}
+                          onClick={handleLogout}
+                          href="#!"
                         >
                           <LogOut className="inline-block size-4 ltr:mr-2 rtl:ml-2"></LogOut>{" "}
-                          Sign Out
+                          Đăng xuất
                         </a>
                       </li>
                     </ul>

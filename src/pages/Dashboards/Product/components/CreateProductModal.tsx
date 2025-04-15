@@ -1,13 +1,8 @@
-import React, {
-  FC,
-  memo,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import React, { FC, memo, useEffect, useMemo, useState } from "react";
 import Modal from "Common/Components/Modal";
 import { Loader2 } from "lucide-react";
 import CreatableSelect from "react-select/creatable";
+import { SupplierSelect } from "Common/Components/Select/SupplierSelect";
 
 // react-redux
 import { useDispatch, useSelector } from "react-redux";
@@ -18,7 +13,6 @@ import * as Yup from "yup";
 import { useFormik } from "formik";
 
 import {
-  getSuppliersThunk as onGetSupplierList,
   getCategories as onGetCategoryList,
   addProductList as onAddProductList,
   updateProductList as onUpdateProductList,
@@ -26,12 +20,10 @@ import {
 } from "slices/thunk";
 
 import { formatMoneyWithVND } from "helpers/utils";
-import { toast } from "react-toastify";
-import { createSupplier } from "apis/supplier";
 
 interface Option {
   readonly label: string;
-  readonly value?: string;
+  readonly value: string;
   readonly options?: Option[];
   readonly isDisabled?: boolean;
 }
@@ -47,7 +39,10 @@ const CreateProductModal: FC<props> = memo(
   ({ defaultData, show, onCancel, onDone }) => {
     const [isButtonLoading, setButtonLoading] = useState(false);
     const [category, setCategory] = useState<Option>();
-    const [supplier, setSupplier] = useState<Option>();
+    const [suppliers, setSuppliers] = useState<Option[]>([]);
+    const [supplierCostPrices, setSupplierCostPrices] = useState<
+      Record<string, string>
+    >({});
     const [unit, setUnit] = useState<Option>();
 
     const [formattedMoney, setFormattedMoney] = useState<{
@@ -68,18 +63,9 @@ const CreateProductModal: FC<props> = memo(
       })
     );
 
-    const selectSupplierData = createSelector(
-      (state: any) => state.Supplier,
-      (state) => ({
-        supplierList: state.suppliers || [],
-      })
-    );
-
     const { categoryList, unitList } = useSelector(selectProductData);
-    const { supplierList } = useSelector(selectSupplierData);
 
     useEffect(() => {
-      dispatch(onGetSupplierList({}));
       dispatch(onGetCategoryList());
       dispatch(onGetUnitList());
     }, [dispatch]);
@@ -91,13 +77,40 @@ const CreateProductModal: FC<props> = memo(
     useEffect(() => {
       const fetchDetailData = async () => {
         if (isEdit) {
-          const { supplier, category, unit, sellingPrice, costPrice } = defaultData;
+          const { supplier, category, unit, sellingPrice, costPrice } =
+            defaultData;
 
           if (supplier) {
-            setSupplier({
+            // Handle single supplier from existing data
+            const supplierOption = {
               label: supplier.name,
               value: supplier.id,
+            };
+            setSuppliers([supplierOption]);
+
+            // Set the cost price for this supplier
+            setSupplierCostPrices({
+              [supplier.id]: costPrice || "0",
             });
+          } else if (
+            defaultData.suppliers &&
+            defaultData.suppliers.length > 0
+          ) {
+            // Handle multiple suppliers if available
+            const supplierOptions = defaultData.suppliers.map((sup: any) => ({
+              label: sup.name,
+              value: sup.id,
+            }));
+
+            setSuppliers(supplierOptions);
+
+            // Set cost prices for each supplier
+            const costPrices: { [key: string]: string } = {};
+            defaultData.suppliers.forEach((sup: any) => {
+              costPrices[sup.id] = sup.costPrice || costPrice || "0";
+            });
+
+            setSupplierCostPrices(costPrices);
           }
 
           setCategory({
@@ -109,16 +122,13 @@ const CreateProductModal: FC<props> = memo(
             value: unit,
           });
           setFormattedMoney({
-            sellingPrice: sellingPrice
-              ? formatMoneyWithVND(+sellingPrice)
-              : 0,
-            costPrice: costPrice
-              ? formatMoneyWithVND(+costPrice)
-              : 0,
+            sellingPrice: sellingPrice ? formatMoneyWithVND(+sellingPrice) : 0,
+            costPrice: costPrice ? formatMoneyWithVND(+costPrice) : 0,
           });
         } else {
           setCategory(undefined);
-          setSupplier(undefined);
+          setSuppliers([]);
+          setSupplierCostPrices({});
           setUnit(undefined);
         }
       };
@@ -128,29 +138,29 @@ const CreateProductModal: FC<props> = memo(
 
     const handleClose = () => onCancel();
 
-    const handleCreateSupplier = async (name: string) => {
-      try {
-        const result = await createSupplier({ name });
-        setSupplier({
-          label: name,
-          value: result?.id,
-        });
-      } catch (error: any) {
-        toast.error(error.message);
-      }
-    };
-
     const handleCreateProduct = async (values: any) => {
       setButtonLoading(true);
 
+      // Format the suppliers data for API
+      const { supplierIds, supplierCostPrices, ...otherValues } = values;
+
+      // Create an array of supplier objects with their cost prices
+      const suppliers = supplierIds.map((id: string) => ({
+        id,
+        costPrice: supplierCostPrices[id] || "0",
+      }));
+
+      // Prepare the data for submission
+      const submissionData = {
+        ...otherValues,
+        suppliers,
+      };
+
       if (isEdit) {
-        const dataUpdate = {
-          id: defaultData.id,
-          ...values,
-        };
-        dispatch(onUpdateProductList(dataUpdate));
+        submissionData.id = defaultData.id;
+        dispatch(onUpdateProductList(submissionData));
       } else {
-        dispatch(onAddProductList({ ...values }));
+        dispatch(onAddProductList(submissionData));
       }
 
       setButtonLoading(false);
@@ -166,7 +176,8 @@ const CreateProductModal: FC<props> = memo(
         costPrice: 0,
       });
       setCategory(undefined);
-      setSupplier(undefined);
+      setSuppliers([]);
+      setSupplierCostPrices({});
       setUnit(undefined);
     };
 
@@ -181,11 +192,17 @@ const CreateProductModal: FC<props> = memo(
         inventory: (defaultData && defaultData.inventory) || "",
         unit: (defaultData && defaultData.unit) || "",
         category: (defaultData && defaultData.category) || "",
-        supplier: (defaultData && defaultData.supplier?.id) || "",
-        additionalDescription:
-          (defaultData && defaultData.additionalDescription) || "",
-        warehouse:
-          (defaultData && defaultData.warehouse) || "KS1",
+        supplierIds:
+          (defaultData && defaultData.suppliers?.map((s: any) => s.id)) || [],
+        supplierCostPrices:
+          (defaultData &&
+            defaultData.suppliers?.reduce((acc: any, s: any) => {
+              acc[s.id] = s.costPrice || "";
+              return acc;
+            }, {})) ||
+          {},
+        description: (defaultData && defaultData.description) || "",
+        warehouse: (defaultData && defaultData.warehouse) || "KS1",
         status: (defaultData && defaultData.status) || "draft",
       },
       validationSchema: Yup.object({
@@ -195,7 +212,24 @@ const CreateProductModal: FC<props> = memo(
         sellingPrice: Yup.string().required("Vui lòng nhập giá bán"),
         costPrice: Yup.string().required("Vui lòng nhập giá vốn"),
         unit: Yup.string().required("Vui lòng chọn đơn vị"),
-        supplier: Yup.string().required("Vui lòng chọn nhà cung cấp"),
+        supplierIds: Yup.array().min(
+          1,
+          "Vui lòng chọn ít nhất một nhà cung cấp"
+        ),
+        supplierCostPrices: Yup.object().test(
+          "all-prices-filled",
+          "Vui lòng nhập giá vốn cho tất cả nhà cung cấp",
+          function (value: Record<string, string> | undefined) {
+            const { supplierIds } = this.parent;
+            if (!supplierIds || supplierIds.length === 0) return true;
+            if (!value) return false;
+
+            // Check if all selected suppliers have a cost price
+            return supplierIds.every(
+              (id: string) => value[id] && value[id].toString().trim() !== ""
+            );
+          }
+        ),
         warehouse: Yup.string().required("Vui lòng chọn cửa hàng"),
         status: Yup.string().required("Vui lòng chọn trạng thái"),
       }),
@@ -212,6 +246,45 @@ const CreateProductModal: FC<props> = memo(
       setFormattedMoney((prev) => ({
         ...prev,
         [name]: formatMoneyWithVND(+numericValue),
+      }));
+
+      // If costPrice is changed, update all supplier cost prices
+      if (name === "costPrice") {
+        const currentSupplierIds = validation.values.supplierIds || [];
+
+        // Update form values
+        const updatedCostPrices = { ...validation.values.supplierCostPrices };
+        currentSupplierIds.forEach((id: string) => {
+          updatedCostPrices[id] = numericValue;
+        });
+        validation.setFieldValue("supplierCostPrices", updatedCostPrices);
+
+        // Update formatted display
+        const formattedPrices: Record<string, string> = {};
+        currentSupplierIds.forEach((id: string) => {
+          formattedPrices[id] = formatMoneyWithVND(+numericValue);
+        });
+        setSupplierCostPrices(formattedPrices);
+      }
+    };
+
+    const handleSupplierCostPriceChange = (
+      supplierId: string,
+      value: string
+    ) => {
+      const numericValue = value.replace(/\D/g, ""); // Remove non-digit characters
+
+      // Update the form values
+      const updatedCostPrices = {
+        ...validation.values.supplierCostPrices,
+        [supplierId]: numericValue,
+      };
+      validation.setFieldValue("supplierCostPrices", updatedCostPrices);
+
+      // Update the state for formatted display
+      setSupplierCostPrices((prev) => ({
+        ...prev,
+        [supplierId]: formatMoneyWithVND(+numericValue),
       }));
     };
 
@@ -359,6 +432,63 @@ const CreateProductModal: FC<props> = memo(
                             </p>
                           ) : null}
                         </div>
+                        <div className="xl:col-span-12">
+                          <label className="inline-block mb-2 text-base font-medium">
+                            Giá vốn theo nhà cung cấp
+                          </label>
+                          {suppliers && suppliers.length > 0 ? (
+                            <div className="grid grid-cols-1 gap-4 p-4 border rounded-md border-slate-200 dark:border-zink-500 mb-4">
+                              {suppliers.map((supplier: Option) => (
+                                <div
+                                  key={supplier.value}
+                                  className="flex items-center gap-4"
+                                >
+                                  <div className="flex-grow-0 w-1/3">
+                                    <span className="font-medium">
+                                      {supplier.label}
+                                    </span>
+                                  </div>
+                                  <div className="flex-grow">
+                                    <input
+                                      type="text"
+                                      className="form-input w-full border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
+                                      placeholder="Nhập giá vốn"
+                                      value={
+                                        supplierCostPrices[
+                                          supplier.value as string
+                                        ] || ""
+                                      }
+                                      onChange={(e) =>
+                                        handleSupplierCostPriceChange(
+                                          supplier.value as string,
+                                          e.target.value
+                                        )
+                                      }
+                                    />
+                                    {!supplierCostPrices[
+                                      supplier.value as string
+                                    ] && (
+                                      <p className="text-red-400 text-sm mt-1">
+                                        Vui lòng nhập giá vốn
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-slate-500 dark:text-zink-200 mb-4">
+                              Vui lòng chọn nhà cung cấp trước
+                            </p>
+                          )}
+                          {validation.touched.supplierCostPrices &&
+                          validation.errors.supplierCostPrices ? (
+                            <p className="text-red-400 mb-4">
+                              {validation.errors.supplierCostPrices}
+                            </p>
+                          ) : null}
+                        </div>
+
                         <div className="xl:col-span-4">
                           <label
                             htmlFor="categorySelect"
@@ -401,32 +531,68 @@ const CreateProductModal: FC<props> = memo(
                           >
                             Nhà cung cấp
                           </label>
-                          <CreatableSelect
-                            className="border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
+                          <SupplierSelect
                             id="supplierSelect"
-                            name="supplier"
-                            placeholder="Chọn"
-                            isClearable={false}
-                            data-choices-text-unique-true
-                            data-choices
-                            onChange={(newValue: any) => {
+                            name="supplierIds"
+                            isMulti={true}
+                            value={suppliers}
+                            onChange={(newValues: any) => {
+                              // Extract just the IDs for the form
+                              const supplierIds =
+                                newValues?.map((item: Option) => item.value) ||
+                                [];
                               validation.setFieldValue(
-                                "supplier",
-                                newValue.value
+                                "supplierIds",
+                                supplierIds
                               );
-                              setSupplier(newValue);
+
+                              // Update the suppliers state
+                              setSuppliers(newValues);
+
+                              // Clean up cost prices for removed suppliers
+                              const currentCostPrices = {
+                                ...validation.values.supplierCostPrices,
+                              };
+                              const currentIds = new Set(supplierIds);
+
+                              // Remove cost prices for suppliers that are no longer selected
+                              Object.keys(currentCostPrices).forEach((id) => {
+                                if (!currentIds.has(id)) {
+                                  delete currentCostPrices[id];
+                                }
+                              });
+
+                              // Add empty cost prices for newly selected suppliers
+                              supplierIds.forEach((id: string) => {
+                                if (!currentCostPrices[id]) {
+                                  currentCostPrices[id] = "";
+                                }
+                              });
+
+                              validation.setFieldValue(
+                                "supplierCostPrices",
+                                currentCostPrices
+                              );
+
+                              // Update the formatted display values
+                              const formattedPrices: Record<string, string> =
+                                {};
+                              Object.keys(currentCostPrices).forEach(
+                                (id: string) => {
+                                  const value = currentCostPrices[id];
+                                  formattedPrices[id] = value
+                                    ? formatMoneyWithVND(+value)
+                                    : "";
+                                }
+                              );
+
+                              setSupplierCostPrices(formattedPrices);
                             }}
-                            value={supplier || ""}
-                            options={supplierList.map((supplier: any) => ({
-                              label: supplier.name,
-                              value: supplier.id,
-                            }))}
-                            onCreateOption={handleCreateSupplier}
                           />
-                          {validation.touched.supplier &&
-                          validation.errors.supplier ? (
+                          {validation.touched.supplierIds &&
+                          validation.errors.supplierIds ? (
                             <p className="text-red-400">
-                              {validation.errors.supplier}
+                              {validation.errors.supplierIds}
                             </p>
                           ) : null}
                         </div>
@@ -472,13 +638,11 @@ const CreateProductModal: FC<props> = memo(
                             <textarea
                               className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
                               id="productDescription"
-                              name="additionalDescription"
+                              name="description"
                               placeholder="Nhập mô tả"
                               rows={5}
                               onChange={validation.handleChange}
-                              value={
-                                validation.values.additionalDescription || ""
-                              }
+                              value={validation.values.description || ""}
                             ></textarea>
                           </div>
                         </div>
@@ -523,9 +687,7 @@ const CreateProductModal: FC<props> = memo(
                             name="warehouse"
                             id="warehouseLocationSelect"
                             onChange={validation.handleChange}
-                            value={
-                              validation.values.warehouse || "Chọn"
-                            }
+                            value={validation.values.warehouse || "Chọn"}
                           >
                             <option value="Kho KS1">Kho KS1</option>
                             <option value="Kho KS2">Kho KS2</option>

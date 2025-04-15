@@ -1,13 +1,20 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { IUserLogin } from "types";
 
 interface ProfileState {
-    user: string;
+    user: IUserLogin;
     error: string;
     success: boolean;
 }
 
 const initialState: ProfileState = {
-    user: "",
+    user: {
+        id: "",
+        username: "",
+        fullname: "",
+        role: "",
+        storeCode: ""
+    },
     error: "",
     success: false
 };
@@ -16,7 +23,7 @@ const profileSlice = createSlice({
     name: "profile",
     initialState,
     reducers: {
-        profileSuccess(state: ProfileState, action: PayloadAction<string>) {
+        profileSuccess(state: ProfileState, action: PayloadAction<IUserLogin>) {
             state.user = action.payload;
             state.success = true;
         },

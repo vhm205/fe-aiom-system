@@ -100,7 +100,7 @@ interface ContentProps {
 const Content: React.FC<ContentProps> = ({ as: Component = 'div', className, children, placement }) => {
   const { open, setOpen } = useContext(DropDownContext)!;
 
-  const getClassName = className || "absolute z-50 py-2 mt-1 text-left list-none bg-white rounded-md shadow-md dropdown-menu min-w-max dark:bg-zink-400";
+  const getClassName = className || "absolute z-50 py-2 mt-1 text-left list-none bg-white rounded-md shadow-md dropdown-menu min-w-[14rem] dark:bg-zink-600";
 
   const [placementState, setPlacement] = useState('right-end' as 'right-end' | 'start-end' | 'top-end' | 'bottom-start' | 'bottom-end' | 'top-start');
 
@@ -113,6 +113,12 @@ const Content: React.FC<ContentProps> = ({ as: Component = 'div', className, chi
   const isRtl = document.getElementsByTagName("html")[0].getAttribute("dir");
 
   const getDropdownStyle = () => {
+    // Skip positioning for custom dropdowns which use custom CSS
+    if (dropdownElementRef.current?.closest('.dropdown-profile') ||
+        dropdownElementRef.current?.closest('.dropdown-product-action')) {
+      return {};
+    }
+
     if (open && placementState === 'right-end' && dropdownElementRef.current) {
       const dropdownElement = dropdownElementRef.current;
       dropdownElement.style.position = 'absolute';
@@ -144,9 +150,9 @@ const Content: React.FC<ContentProps> = ({ as: Component = 'div', className, chi
     if (open && placementState === 'bottom-end' && dropdownElementRef.current) {
       const dropdownElement = dropdownElementRef.current;
       dropdownElement.style.position = 'absolute';
-      dropdownElement.style.inset = '0px 0px auto auto';
+      dropdownElement.style.inset = '0px 0px auto 0px';
       dropdownElement.style.margin = '0px';
-      dropdownElement.style.transform = 'translate(0px, 39px)';
+      dropdownElement.style.transform = 'translate(calc(-100% + 37.5px), 45px)';
     }
     if (open && placementState === 'top-start' && dropdownElementRef.current) {
       const dropdownElement = dropdownElementRef.current;

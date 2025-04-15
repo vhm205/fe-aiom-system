@@ -19,3 +19,11 @@ export interface IHttpResponse<T = any> {
   message: string;
   metadata?: any;
 }
+
+export interface IUserLogin {
+  id: string;
+  username: string;
+  fullname: string;
+  role: string;
+  storeCode: string;
+}

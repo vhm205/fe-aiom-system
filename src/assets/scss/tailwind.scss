@@ -21,6 +21,7 @@ File: tailwind scss File
 @import "plugins/gridjs";
 @import "plugins/select";
 @import "plugins/multi-select";
+@import "custom/dropdown-fix";
 
 .group\/menu-link:hover,
 .animate {
