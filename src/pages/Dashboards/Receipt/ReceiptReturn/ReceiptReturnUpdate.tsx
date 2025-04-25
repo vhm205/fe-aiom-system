@@ -17,7 +17,7 @@ import { Counter } from "Common/Components/Counter";
 import { formatMoney, formatMoneyWithVND } from "helpers/utils";
 import withRouter from "Common/withRouter";
 import {
-  getSuppliers as onGetSupplierList,
+  getSuppliersThunk as onGetSupplierList,
   getReceiptReturnInfo as onGetReceiptReturnInfo,
 } from "slices/thunk";
 import { toast, ToastContainer } from "react-toastify";
@@ -27,13 +27,14 @@ import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { TimePicker } from "Common/Components/TimePIcker";
 import { getDate } from "helpers/date";
 import AsyncPaginatedSelect from "Common/Components/Select/AsyncPaginatedSelect";
+import { createSupplier } from "apis/supplier";
 
-interface Option {
-  readonly label: string;
-  readonly value?: string;
-  readonly options?: Option[];
-  readonly isDisabled?: boolean;
-}
+// interface Option {
+//   readonly label: string;
+//   readonly value?: string;
+//   readonly options?: Option[];
+//   readonly isDisabled?: boolean;
+// }
 
 const receiptReturnStatus = [
   { label: "Nháp", value: "draft" },
@@ -47,20 +48,18 @@ const receiptReturnType = [
   { label: "Nhà cung cấp", value: "supplier" },
 ];
 
-const warehouseLocation = [
+const warehouse = [
   { label: "Kho KS1", value: "Kho KS1" },
   { label: "Kho KS2", value: "Kho KS2" },
   { label: "Kho KH", value: "Kho KH" },
 ];
 
 const customerReasons = ["Sản phẩm lỗi", "Đổi sản phẩm", "Lý do khác"];
-
 const supplierReasons = ["Ngừng bán", "Lỗi sản xuất", "Lý do khác"];
 
 const UpdateReceiptReturn = (props: any) => {
   const [searchParams] = useSearchParams();
   const [rows, setRows] = useState<any[]>([]);
-  const [supplier, setSupplier] = useState<Option>();
   const [productListModal, setProductListModal] = useState(false);
   const productListModalToggle = () => setProductListModal(!productListModal);
 
@@ -88,6 +87,14 @@ const UpdateReceiptReturn = (props: any) => {
   const [selectedReason, setSelectedReason] = useState("");
   const [customReason, setCustomReason] = useState("");
 
+  const handleCreateSupplier = async (name: string) => {
+    const result = await createSupplier({ name });
+    return {
+      value: result.id,
+      label: name,
+    };
+  };
+
   const handleLoadSupplier = async (inputValue: string, page: number) => {
     try {
       const response: IHttpResponse = await request.get(
@@ -104,9 +111,9 @@ const UpdateReceiptReturn = (props: any) => {
       const { data, metadata } = response;
 
       return {
-        results: data?.map((item: string) => ({
-          value: item,
-          label: item,
+        results: data?.map((item: Record<string, string>) => ({
+          value: item.id,
+          label: item.name,
         })),
         hasMore: metadata?.hasNext,
         page: metadata?.currentPage,
@@ -150,7 +157,8 @@ const UpdateReceiptReturn = (props: any) => {
       status: values.status,
       type: values.type,
       returnDate: getDate(values.returnDate).format(),
-      warehouseLocation: values.warehouseLocation,
+      warehouse: values.warehouse,
+      supplier: values.supplier?.id,
       totalProduct: rows.length,
       totalAmount,
       quantity,
@@ -186,7 +194,8 @@ const UpdateReceiptReturn = (props: any) => {
       returnDate: receiptInfo.returnDate
         ? getDate(receiptInfo.returnDate).toDate()
         : "",
-      warehouseLocation: receiptInfo.warehouseLocation || "",
+      warehouse: receiptInfo.warehouse || "",
+      supplier: receiptInfo.supplier || {},
       name: receiptInfo.name || "",
       reason: receiptInfo.reason || customerReasons[0],
       note: receiptInfo.note || "",
@@ -194,10 +203,9 @@ const UpdateReceiptReturn = (props: any) => {
       type: receiptInfo.type || "customer",
     },
     validationSchema: Yup.object({
-      name: Yup.string().required("Vui lòng nhập tên"),
       reason: Yup.string().required("Vui lòng nhập lý do"),
       returnDate: Yup.string().required("Vui lòng chọn ngày trả hàng"),
-      warehouseLocation: Yup.string().required("Vui lòng chọn cửa hàng"),
+      warehouse: Yup.string().required("Vui lòng chọn cửa hàng"),
     }),
     onSubmit: handleSubmitForm,
   });
@@ -209,7 +217,7 @@ const UpdateReceiptReturn = (props: any) => {
   }, [validation.values.type]);
 
   useEffect(() => {
-    dispatch(onGetSupplierList());
+    dispatch(onGetSupplierList({}));
   }, [dispatch]);
 
   useEffect(() => {
@@ -234,13 +242,6 @@ const UpdateReceiptReturn = (props: any) => {
     } else {
       setSelectedReason("Lý do khác");
       setCustomReason(receiptInfo.reason);
-    }
-
-    if (receiptInfo.type === "supplier") {
-      setSupplier({
-        label: receiptInfo.name,
-        value: receiptInfo.name,
-      });
     }
   }, [receiptInfo, reasons]);
 
@@ -382,50 +383,34 @@ const UpdateReceiptReturn = (props: any) => {
                       <AsyncPaginatedSelect
                         loadOptions={handleLoadSupplier}
                         defaultOptions={supplierList.map(
-                          (supplier: string) => ({
-                            label: supplier,
-                            value: supplier,
+                          (supplier: Record<string, string>) => ({
+                            label: supplier.name,
+                            value: supplier.id,
                           })
                         )}
-                        placeholder="Chọn"
+                        placeholder="Chọn nhà cung cấp"
                         debounceTimeout={500}
                         noOptionsMessage={() => "Không thấy nhà cung cấp"}
-                        createOption={(value) =>
-                          Promise.resolve({
-                            value,
-                            label: value,
-                          })
-                        }
+                        createOption={handleCreateSupplier}
                         onChange={(option) => {
                           if (option) {
-                            validation.setFieldValue("name", option.value);
+                            validation.setFieldValue("supplier", {
+                              id: option.value,
+                              name: option.label,
+                            });
                           }
                         }}
-                        value={{
-                          label: validation.values?.name,
-                          value: validation.values?.name,
-                        }}
+                        value={
+                          validation.values.supplier
+                            ? {
+                                label: validation.values?.supplier?.name,
+                                value: validation.values?.supplier?.id,
+                              }
+                            : null
+                        }
                       />
-                      {/* <CreatableSelect
-                        className="border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
-                        id="supplierSelect"
-                        name="name"
-                        placeholder="Chọn"
-                        isClearable={false}
-                        data-choices-text-unique-true
-                        data-choices
-                        value={supplier}
-                        onChange={(newValue: any) => {
-                          validation.setFieldValue("name", newValue.value);
-                          setSupplier(newValue);
-                        }}
-                        options={supplierList.map((supplier: string) => ({
-                          label: supplier,
-                          value: supplier,
-                        }))}
-                      /> */}
-                      {validation.touched.name && validation.errors.name ? (
-                        <p className="text-red-400">{validation.errors.name}</p>
+                      {validation.touched.supplier && validation.errors.supplier ? (
+                        <p className="text-red-400">{validation.errors.supplier}</p>
                       ) : null}
                     </div>
                   ) : (
@@ -517,22 +502,22 @@ const UpdateReceiptReturn = (props: any) => {
                       className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
                       data-choices
                       data-choices-search-false
-                      name="warehouseLocation"
+                      name="warehouse"
                       id="warehouseLocationSelect"
                       onChange={validation.handleChange}
-                      value={validation.values.warehouseLocation || ""}
+                      value={validation.values.warehouse || ""}
                     >
                       <option value="">Chọn kho</option>
-                      {warehouseLocation.map((location) => (
+                      {warehouse.map((location) => (
                         <option key={location.value} value={location.value}>
                           {location.label}
                         </option>
                       ))}
                     </select>
-                    {validation.touched.warehouseLocation &&
-                    validation.errors.warehouseLocation ? (
+                    {validation.touched.warehouse &&
+                    validation.errors.warehouse ? (
                       <p className="text-red-400">
-                        {validation.errors.warehouseLocation}
+                        {validation.errors.warehouse}
                       </p>
                     ) : null}
                   </div>

@@ -17,7 +17,7 @@ import { Counter } from "Common/Components/Counter";
 import { formatMoney, formatMoneyWithVND } from "helpers/utils";
 import withRouter from "Common/withRouter";
 import {
-  getSuppliers as onGetSupplierList,
+  getSuppliersThunk as onGetSupplierList,
   getReceiptImportInfo as onGetReceiptImportInfo,
 } from "slices/thunk";
 import { toast, ToastContainer } from "react-toastify";
@@ -27,6 +27,7 @@ import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { TimePicker } from "Common/Components/TimePIcker";
 import { getDate } from "helpers/date";
 import AsyncPaginatedSelect from "Common/Components/Select/AsyncPaginatedSelect";
+import { createSupplier } from "apis/supplier";
 
 const UpdateReceiptCheck = (props: any) => {
   const [searchParams] = useSearchParams();
@@ -56,7 +57,7 @@ const UpdateReceiptCheck = (props: any) => {
   const { receiptInfo, receiptItems } = useSelector(selectDataReceipt);
 
   useEffect(() => {
-    dispatch(onGetSupplierList());
+    dispatch(onGetSupplierList({}));
   }, [dispatch]);
 
   useEffect(() => {
@@ -111,7 +112,7 @@ const UpdateReceiptCheck = (props: any) => {
       paymentDate: getDate(values.paymentDate).format(),
       quantity,
       supplier: values.supplier,
-      warehouseLocation: values.warehouseLocation,
+      warehouse: values.warehouse,
       totalAmount,
       totalProduct: rows.length,
       items,
@@ -149,7 +150,7 @@ const UpdateReceiptCheck = (props: any) => {
         ? getDate(receiptInfo.paymentDate).toDate()
         : "",
       supplier: receiptInfo.supplier || "",
-      warehouseLocation: receiptInfo.warehouseLocation || "",
+      warehouse: receiptInfo.warehouse || "",
       note: receiptInfo.note || "",
       status: receiptInfo.status || "",
     },
@@ -157,10 +158,18 @@ const UpdateReceiptCheck = (props: any) => {
       importDate: Yup.string().required("Vui lòng chọn ngày nhập hàng"),
       paymentDate: Yup.string().required("Vui lòng chọn ngày thanh toán"),
       supplier: Yup.string().required("Vui lòng chọn nhà cung cấp"),
-      warehouseLocation: Yup.string().required("Vui lòng chọn cửa hàng"),
+      warehouse: Yup.string().required("Vui lòng chọn cửa hàng"),
     }),
     onSubmit: handleSubmitForm,
   });
+
+  const handleCreateSupplier = async (name: string) => {
+    const result = await createSupplier({ name });
+    return {
+      value: result.id,
+      label: name,
+    };
+  };
 
   const handleLoadSupplier = async (inputValue: string, page: number) => {
     try {
@@ -372,12 +381,7 @@ const UpdateReceiptCheck = (props: any) => {
                       placeholder="Chọn"
                       debounceTimeout={500}
                       noOptionsMessage={() => "Không thấy nhà cung cấp"}
-                      createOption={(value) =>
-                        Promise.resolve({
-                          value,
-                          label: value,
-                        })
-                      }
+                      createOption={handleCreateSupplier}
                       onChange={(option) => {
                         if (option) {
                           validation.setFieldValue("supplier", option.value);
@@ -407,20 +411,20 @@ const UpdateReceiptCheck = (props: any) => {
                       className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
                       data-choices
                       data-choices-search-false
-                      name="warehouseLocation"
+                      name="warehouse"
                       id="warehouseLocationSelect"
                       onChange={validation.handleChange}
-                      value={validation.values.warehouseLocation || ""}
+                      value={validation.values.warehouse || ""}
                     >
                       <option value="">Chọn kho</option>
                       <option value="Kho KS1">Kho KS1</option>
                       <option value="Kho KS2">Kho KS2</option>
                       <option value="Kho KH">Kho KH</option>
                     </select>
-                    {validation.touched.warehouseLocation &&
-                    validation.errors.warehouseLocation ? (
+                    {validation.touched.warehouse &&
+                    validation.errors.warehouse ? (
                       <p className="text-red-400">
-                        {validation.errors.warehouseLocation}
+                        {validation.errors.warehouse}
                       </p>
                     ) : null}
                   </div>

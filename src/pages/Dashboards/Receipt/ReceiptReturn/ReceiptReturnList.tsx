@@ -37,48 +37,8 @@ import PrintMultipleBarcodeModal from "../components/PrintMultipleBarcodeModal";
 import PrintSingleBarcodeModal from "../components/PrintSingleBarcodeModal";
 import { TimePicker } from "Common/Components/TimePIcker";
 import { getDate } from "helpers/date";
-
-const RECEIPT_STATUS = {
-  DRAFT: "draft",
-  PROCESSING: "processing",
-  COMPLETED: "completed",
-  CANCELLED: "cancelled",
-};
-
-const Status = ({ item }: any) => {
-  switch (item) {
-    case RECEIPT_STATUS.DRAFT:
-      return (
-        <span className="delivery_status px-2.5 py-0.5 text-xs inline-block font-medium rounded border bg-slate-100 border-slate-200 text-slate-500 dark:bg-slate-500/20 dark:border-slate-500/20">
-          Phiếu nháp
-        </span>
-      );
-    case RECEIPT_STATUS.PROCESSING:
-      return (
-        <span className="delivery_status px-2.5 py-0.5 text-xs inline-block font-medium rounded border bg-purple-100 border-purple-200 text-purple-500 dark:bg-purple-500/20 dark:border-purple-500/20">
-          Đang xử lý
-        </span>
-      );
-    case RECEIPT_STATUS.COMPLETED:
-      return (
-        <span className="delivery_status px-2.5 py-0.5 text-xs inline-block font-medium rounded border bg-green-100 border-green-200 text-green-500 dark:bg-green-500/20 dark:border-green-500/20">
-          Đã hoàn thành
-        </span>
-      );
-    case RECEIPT_STATUS.CANCELLED:
-      return (
-        <span className="delivery_status px-2.5 py-0.5 text-xs inline-block font-medium rounded border bg-red-100 border-red-200 text-red-500 dark:bg-red-500/20 dark:border-red-500/20">
-          Đã hủy
-        </span>
-      );
-    default:
-      return (
-        <span className="delivery_status px-2.5 py-0.5 text-xs inline-block font-medium rounded border bg-green-100 border-green-200 text-green-500 dark:bg-green-500/20 dark:border-green-500/20">
-          {item}
-        </span>
-      );
-  }
-};
+import { NoTableResult } from "Common/Components/NoTableResult";
+import { ReceiptStatus } from "./components/ReceiptStatus";
 
 const ReceiptReturnList = () => {
   const dispatch = useDispatch<any>();
@@ -251,8 +211,10 @@ const ReceiptReturnList = () => {
       },
       {
         header: "Tên",
-        accessorKey: "name",
-        enableColumnFilter: false,
+        cell: (cell: any) => {
+          const origin = cell.row.original;
+          return origin.name || origin.supplier?.name;
+        },
       },
       {
         header: "Số lượng trả",
@@ -270,7 +232,7 @@ const ReceiptReturnList = () => {
         accessorKey: "status",
         enableColumnFilter: false,
         enableSorting: true,
-        cell: (cell: any) => <Status item={cell.getValue()} />,
+        cell: (cell: any) => <ReceiptStatus status={cell.getValue()} />,
       },
       {
         header: "Action",
@@ -505,24 +467,17 @@ const ReceiptReturnList = () => {
               pagination={paginationData}
               setPaginationData={setPaginationData}
               customPageSize={10}
-              divclassName="mt-5 overflow-x-auto"
-              tableclassName="w-full whitespace-nowrap"
+              // divclassName="mt-5 overflow-x-auto"
+              // tableclassName="w-full whitespace-nowrap"
+              divclassName="mt-5"
+              tableclassName="w-full whitespace-nowrap overflow-x-auto"
               theadclassName="ltr:text-left rtl:text-right bg-slate-100 dark:bg-zink-600"
               thclassName="px-3.5 py-2.5 font-semibold text-slate-500 border-b border-slate-200 dark:border-zink-500 dark:text-zink-200"
               tdclassName="px-3.5 py-2.5 border-y border-slate-200 dark:border-zink-500"
               PaginationClassName="flex flex-col items-center mt-5 md:flex-row"
             />
           ) : (
-            <div className="noresult">
-              <div className="py-6 text-center">
-                <Search className="size-6 mx-auto text-sky-500 fill-sky-100 dark:sky-500/20" />
-                <h5 className="mt-2 mb-1">Sorry! No Result Found</h5>
-                <p className="mb-0 text-slate-500 dark:text-zink-200">
-                  We've searched more than 299+ orders We did not find any
-                  orders for you search.
-                </p>
-              </div>
-            </div>
+            <NoTableResult />
           )}
         </div>
       </div>

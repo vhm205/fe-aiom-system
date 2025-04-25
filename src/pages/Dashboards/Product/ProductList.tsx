@@ -1,4 +1,3 @@
-"use strict";
 import React, {
   useEffect,
   useMemo,
@@ -7,7 +6,6 @@ import React, {
   useCallback,
 } from "react";
 import { Link } from "react-router-dom";
-import { ToastContainer } from "react-toastify";
 import { PaginationState } from "@tanstack/react-table";
 import Select from "react-select";
 import debounce from "lodash.debounce";
@@ -41,48 +39,16 @@ import ImportProductModal from "./components/ImportProductModal";
 import CreateProductModal from "./components/CreateProductModal";
 import PrintBarcodeModal from "./components/PrintBarcodeModal";
 import { formatMoney } from "helpers/utils";
-
-const PRODUCT_STATUS = {
-  draft: "draft",
-  active: "active",
-  inactive: "inactive",
-};
+import { NoTableResult } from "Common/Components/NoTableResult";
+import { PRODUCT_STATUS } from "Common/constants/product-constant";
+import { ProductStatus } from "./components/ProductStatus";
 
 const optionsFilterStatus: any = [
   { value: "", label: "Trạng thái" },
-  { value: PRODUCT_STATUS.draft, label: "Nháp" },
-  { value: PRODUCT_STATUS.active, label: "Hoạt động" },
-  { value: PRODUCT_STATUS.inactive, label: "Không hoạt động" },
+  { value: PRODUCT_STATUS.DRAFT, label: "Nháp" },
+  { value: PRODUCT_STATUS.ACTIVE, label: "Hoạt động" },
+  { value: PRODUCT_STATUS.INACTIVE, label: "Không hoạt động" },
 ];
-
-const Status = ({ item }: any) => {
-  switch (item) {
-    case PRODUCT_STATUS.draft:
-      return (
-        <span className="status px-2.5 py-0.5 inline-block text-xs font-medium rounded border bg-orange-100 border-transparent text-orange-500 dark:bg-orange-500/20 dark:border-transparent">
-          Nháp
-        </span>
-      );
-    case PRODUCT_STATUS.active:
-      return (
-        <span className="status px-2.5 py-0.5 inline-block text-xs font-medium rounded border bg-green-100 border-transparent text-green-500 dark:bg-green-500/20 dark:border-transparent">
-          Hoạt động
-        </span>
-      );
-    case PRODUCT_STATUS.inactive:
-      return (
-        <span className="status px-2.5 py-0.5 inline-block text-xs font-medium rounded border bg-red-100 border-transparent text-red-500 dark:bg-red-500/20 dark:border-transparent">
-          Không hoạt động
-        </span>
-      );
-    default:
-      return (
-        <span className="status px-2.5 py-0.5 inline-block text-xs font-medium rounded border bg-green-100 border-transparent text-green-500 dark:bg-green-500/20 dark:border-transparent">
-          {item}
-        </span>
-      );
-  }
-};
 
 const ProductList = () => {
   const dispatch = useDispatch<any>();
@@ -297,19 +263,24 @@ const ProductList = () => {
       },
       {
         header: "Nhà cung cấp",
-        accessorKey: "supplier",
+        accessorKey: "suppliers",
         enableColumnFilter: false,
         enableSorting: true,
+        cell: (cell: any) => {
+          const value = cell.getValue();
+          const supplier = value.map((supplier: any) => supplier.name).join(', ')
+          return supplier;
+        },
       },
       {
         header: "Mô tả",
-        accessorKey: "additionalDescription",
+        accessorKey: "description",
         enableColumnFilter: false,
         enableSorting: true,
       },
       {
         header: "Cửa hàng",
-        accessorKey: "warehouseLocation",
+        accessorKey: "warehouse",
         enableColumnFilter: false,
         enableSorting: true,
       },
@@ -318,36 +289,36 @@ const ProductList = () => {
         accessorKey: "status",
         enableColumnFilter: false,
         enableSorting: true,
-        cell: (cell: any) => <Status item={cell.getValue()} />,
+        cell: (cell: any) => <ProductStatus status={cell.getValue()} />,
       },
       {
         header: "Action",
         enableColumnFilter: false,
         enableSorting: true,
         cell: (cell: any) => (
-          <Dropdown className="relative dropdown">
+          <Dropdown className={`relative dropdown-product-action ${cell.row.index >= 7 ? 'dropdown-bottom' : ''}`}>
             <Dropdown.Trigger
               className="flex items-center justify-center size-[30px] dropdown-toggle p-0 text-slate-500 btn bg-slate-100 hover:text-white hover:bg-slate-600 focus:text-white focus:bg-slate-600 focus:ring focus:ring-slate-100 active:text-white active:bg-slate-600 active:ring active:ring-slate-100 dark:bg-slate-500/20 dark:text-slate-400 dark:hover:bg-slate-500 dark:hover:text-white dark:focus:bg-slate-500 dark:focus:text-white dark:active:bg-slate-500 dark:active:text-white dark:ring-slate-400/20"
-              id="productAction1"
+              id={`productAction${cell.row.index}`}
               data-bs-toggle="dropdown"
             >
               <MoreHorizontal className="size-3" />
             </Dropdown.Trigger>
             <Dropdown.Content
-              placement={cell.row.index ? "top-end" : "right-end"}
-              className="absolute z-50 py-2 mt-1 ltr:text-left rtl:text-right list-none bg-white rounded-md shadow-md dropdown-menu min-w-[10rem] dark:bg-zink-600"
-              aria-labelledby="productAction1"
+              placement="right-end"
+              className="absolute z-[1001] py-2 px-1 ltr:text-left rtl:text-right list-none bg-white rounded-md shadow-lg border border-slate-200 dropdown-menu min-w-[10rem] dark:bg-zink-600 dark:border-zink-500"
+              aria-labelledby={`productAction${cell.row.index}`}
             >
               <li>
                 <a
                   href="#!"
-                  className="block px-4 py-1.5 text-base transition-all duration-200 ease-linear text-slate-600 dropdown-item hover:bg-slate-100 hover:text-slate-500 focus:bg-slate-100 focus:text-slate-500 dark:text-zink-100 dark:hover:bg-zink-500 dark:hover:text-zink-200 dark:focus:bg-zink-500 dark:focus:text-zink-200"
+                  className="block px-4 py-2 text-base transition-all duration-200 ease-linear text-slate-600 dropdown-item hover:bg-slate-100 hover:text-slate-500 focus:bg-slate-100 focus:text-slate-500 dark:text-zink-100 dark:hover:bg-zink-500 dark:hover:text-zink-200 dark:focus:bg-zink-500 dark:focus:text-zink-200 rounded-md mx-1"
                   onClick={() => {
                     const data = cell.row.original;
                     onClickShowBarcode(data);
                   }}
                 >
-                  <Eye className="inline-block size-3 ltr:mr-1 rtl:ml-1" />{" "}
+                  <Eye className="inline-block size-4 ltr:mr-2 rtl:ml-2" />{" "}
                   <span className="align-middle">In tem mã</span>
                 </a>
               </li>
@@ -363,20 +334,20 @@ const ProductList = () => {
               <li>
                 <a
                   href="#!"
-                  className="block px-4 py-1.5 text-base transition-all duration-200 ease-linear text-slate-600 dropdown-item hover:bg-slate-100 hover:text-slate-500 focus:bg-slate-100 focus:text-slate-500 dark:text-zink-100 dark:hover:bg-zink-500 dark:hover:text-zink-200 dark:focus:bg-zink-500 dark:focus:text-zink-200"
+                  className="block px-4 py-2 text-base transition-all duration-200 ease-linear text-slate-600 dropdown-item hover:bg-slate-100 hover:text-slate-500 focus:bg-slate-100 focus:text-slate-500 dark:text-zink-100 dark:hover:bg-zink-500 dark:hover:text-zink-200 dark:focus:bg-zink-500 dark:focus:text-zink-200 rounded-md mx-1"
                   onClick={() => onClickCreateProduct(cell.row.original)}
                 >
-                  <FileEdit className="inline-block size-3 ltr:mr-1 rtl:ml-1" />{" "}
+                  <FileEdit className="inline-block size-4 ltr:mr-2 rtl:ml-2" />{" "}
                   <span className="align-middle">Cập nhật</span>
                 </a>
               </li>
               <li>
                 <Link
-                  className="block px-4 py-1.5 text-base transition-all duration-200 ease-linear text-slate-600 dropdown-item hover:bg-slate-100 hover:text-slate-500 focus:bg-slate-100 focus:text-slate-500 dark:text-zink-100 dark:hover:bg-zink-500 dark:hover:text-zink-200 dark:focus:bg-zink-500 dark:focus:text-zink-200"
+                  className="block px-4 py-2 text-base transition-all duration-200 ease-linear text-slate-600 dropdown-item hover:bg-slate-100 hover:text-slate-500 focus:bg-slate-100 focus:text-slate-500 dark:text-zink-100 dark:hover:bg-zink-500 dark:hover:text-zink-200 dark:focus:bg-zink-500 dark:focus:text-zink-200 rounded-md mx-1"
                   to="#!"
                   onClick={() => onClickDelete(cell.row.original)}
                 >
-                  <Trash2 className="inline-block size-3 ltr:mr-1 rtl:ml-1" />{" "}
+                  <Trash2 className="inline-block size-4 ltr:mr-2 rtl:ml-2" />{" "}
                   <span className="align-middle">Xóa</span>
                 </Link>
               </li>
@@ -414,7 +385,6 @@ const ProductList = () => {
           onClose={showBarcodeModalToggle}
         />
       )}
-      <ToastContainer closeButton={false} limit={1} />
       <div className="card" id="productListTable">
         <div className="card-body">
           <div className="flex items-center">
@@ -464,19 +434,6 @@ const ProductList = () => {
                 <i className="align-baseline ltr:pl-1 rtl:pr-1 ri-close-line"></i>
               </button>
             </div>
-            {/* <div className="xl:col-span-2"> */}
-            {/*   <div> */}
-            {/*     <Flatpickr */}
-            {/*       className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200" */}
-            {/*       options={{ */}
-            {/*         dateFormat: "d M, Y", */}
-            {/*         mode: "range", */}
-            {/*       }} */}
-            {/*       placeholder="Chọn ngày" */}
-            {/*       readOnly={true} */}
-            {/*     /> */}
-            {/*   </div> */}
-            {/* </div> */}
             <div className="lg:col-span-3 ltr:lg:text-right rtl:lg:text-left xl:col-span-3 xl:col-start-10">
               <div className="flex gap-2 xl:justify-end">
                 <input
@@ -499,7 +456,7 @@ const ProductList = () => {
           </div>
         </div>
         {/* List Product */}
-        <div className="!pt-1 card-body">
+        <div className="!pt-1 card-body w-full overflow-x-auto">
           {productList && productList.length > 0 ? (
             <TableCustom
               isPagination={true}
@@ -510,24 +467,21 @@ const ProductList = () => {
               pagination={paginationData}
               setPaginationData={setPaginationData}
               customPageSize={10}
-              divclassName="overflow-x-auto"
-              tableclassName="w-full whitespace-nowrap"
+              divclassName="mt-5 w-full overflow-x-auto"
+              tableclassName="w-full overflow-x-auto"
               theadclassName="ltr:text-left rtl:text-right bg-slate-100 dark:bg-zink-600"
-              thclassName="px-3.5 py-2.5 font-semibold border-b border-slate-200 dark:border-zink-500"
+              thclassName="px-3.5 py-2.5 font-semibold text-slate-500 border-b border-slate-200 dark:border-zink-500 dark:text-zink-200"
               tdclassName="px-3.5 py-2.5 border-y border-slate-200 dark:border-zink-500"
-              PaginationClassName="flex flex-col items-center gap-4 px-4 mt-4 md:flex-row"
+              PaginationClassName="flex flex-col items-center mt-5 md:flex-row"
+              // divclassName="overflow-x-auto"
+              // tableclassName="w-full whitespace-nowrap"
+              // theadclassName="ltr:text-left rtl:text-right bg-slate-100 dark:bg-zink-600"
+              // thclassName="px-3.5 py-2.5 font-semibold border-b border-slate-200 dark:border-zink-500"
+              // tdclassName="px-3.5 py-2.5 border-y border-slate-200 dark:border-zink-500"
+              // PaginationClassName="flex flex-col items-center gap-4 px-4 mt-4 md:flex-row"
             />
           ) : (
-            <div className="noresult">
-              <div className="py-6 text-center">
-                <Search className="size-6 mx-auto mb-3 text-sky-500 fill-sky-100 dark:fill-sky-500/20" />
-                <h5 className="mt-2 mb-1">Sorry! No Result Found</h5>
-                <p className="mb-0 text-slate-500 dark:text-zink-200">
-                  We've searched more than 199+ product We did not find any
-                  product for you search.
-                </p>
-              </div>
-            </div>
+            <NoTableResult />
           )}
         </div>
       </div>

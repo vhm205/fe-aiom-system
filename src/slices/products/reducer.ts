@@ -5,7 +5,6 @@ import {
   updateProductList,
   deleteProductList,
   getCategories,
-  getSuppliers,
   getUnits,
 } from "./thunk";
 
@@ -13,9 +12,8 @@ export const initialState = {
   productList: [],
   pagination: {},
   categoryList: [],
-  supplierList: [],
   unitList: [],
-  error: {},
+  message: {},
 };
 
 const ProductSlice = createSlice({
@@ -30,16 +28,26 @@ const ProductSlice = createSlice({
       state.pagination = action.payload?.metadata;
     });
     builder.addCase(getProductList.rejected, (state: any, action: any) => {
-      state.error = action.payload.error || null;
+      state.message = {
+        type: "error",
+        text: action.error || { message: "Something Error" },
+      };
     });
     // add
     builder.addCase(addProductList.fulfilled, (state: any, action: any) => {
       if (action.payload) {
         state.productList.unshift(action.payload);
+        state.message = {
+          type: "success",
+          text: "Thêm mới thành công",
+        };
       }
     });
     builder.addCase(addProductList.rejected, (state: any, action: any) => {
-      state.error = action.payload.error || null;
+      state.message = {
+        type: "error",
+        text: action.error || { message: "Something Error" },
+      };
     });
     // update
     builder.addCase(updateProductList.fulfilled, (state: any, action: any) => {
@@ -48,32 +56,41 @@ const ProductSlice = createSlice({
       state.productList = state.productList.map((product: any) =>
         product.id === action.payload.id
           ? { ...product, ...action.payload }
-          : product,
+          : product
       );
+      state.message = {
+        type: 'success',
+        text: 'Cập nhật thành công',
+      }
     });
     builder.addCase(updateProductList.rejected, (state: any, action: any) => {
-      state.error = action.payload.error || null;
+      state.message = {
+        type: "error",
+        text: action.error || { message: "Something Error" },
+      };
     });
     // delete
     builder.addCase(deleteProductList.fulfilled, (state: any, action: any) => {
       if (!action.payload) return;
 
       state.productList = state.productList.filter(
-        (product: any) => product.id.toString() !== action.payload.toString(),
+        (product: any) => product.id.toString() !== action.payload.toString()
       );
+      state.message = {
+        type: 'success',
+        text: 'Xóa thành công',
+      }
     });
     builder.addCase(deleteProductList.rejected, (state: any, action: any) => {
-      state.error = action.payload.error || null;
+      state.message = {
+        type: "error",
+        text: action.error || { message: "Something Error" },
+      };
     });
     // get category
     builder.addCase(getCategories.fulfilled, (state: any, action: any) => {
       if (!action.payload) return;
       state.categoryList = action.payload?.data;
-    });
-    // get suppliers
-    builder.addCase(getSuppliers.fulfilled, (state: any, action: any) => {
-      if (!action.payload) return;
-      state.supplierList = action.payload?.data;
     });
     // get units
     builder.addCase(getUnits.fulfilled, (state: any, action: any) => {

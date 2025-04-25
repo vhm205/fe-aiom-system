@@ -7,6 +7,7 @@ import {
   OnChangeValue,
   OptionsOrGroups,
 } from "react-select";
+import { toast } from "react-toastify";
 
 interface Option {
   value: string | number;
@@ -123,8 +124,8 @@ const AsyncPaginatedSelect: React.FC<AsyncPaginatedSelectProps> = ({
         setOptions((prevOptions) => [...prevOptions, newOption]);
         onChange &&
           onChange(newOption, { action: "create-option", option: newOption });
-      } catch (error) {
-        console.error("Error creating option:", error);
+      } catch (error: any) {
+        toast.error("Error creating option: ", error.message);
       } finally {
         setIsLoading(false);
       }

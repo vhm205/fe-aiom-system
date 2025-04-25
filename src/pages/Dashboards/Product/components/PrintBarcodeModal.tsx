@@ -65,9 +65,9 @@ const PrintBarcodeModal: React.FC<props> = ({ show, barcode, onClose }) => {
       <div className="print-only" ref={barcodeRef}>
         <div className={`flex justify-start flex-wrap`}>
           {Array(quantity)
-            .fill(0)
-            .map((_) => (
-              <div className="p-2 grid justify-items-center">
+            .fill(`${barcode}-${Math.random()}-${Date.now()}`)
+            .map((idx) => (
+              <div key={idx} className="p-2 grid justify-items-center">
                 <Barcode
                   value={barcode}
                   width={1}

@@ -1,48 +1,43 @@
 import React from "react";
-
-// Formik validation
 import * as Yup from "yup";
 import { useFormik as useFormic } from "formik";
+import { useDispatch, useSelector } from "react-redux";
+import { createSelector } from "reselect";
+import { Link } from "react-router-dom";
 
-// Image
+// Assets
 // import logoLight from "assets/images/logo-light.png";
 // import logoDark from "assets/images/logo-dark.png";
 import logoDark from "assets/images/logo/logo5.png";
 import logoLight from "assets/images/logo/logo6.png";
+
 import { loginUser } from "slices/thunk";
-import { useDispatch, useSelector } from "react-redux";
 import withRouter from "Common/withRouter";
-import { createSelector } from "reselect";
 import AuthIcon from "pages/AuthenticationInner/AuthIcon";
-import { Link } from "react-router-dom";
-import { ToastContainer } from "react-toastify";
 
 const Login = (props: any) => {
-
   const dispatch = useDispatch<any>();
 
   const selectLogin = createSelector(
-    (state: any) => state.Register,
     (state: any) => state.Login,
-    (register, login) => ({
-      user: register.user,
+    (login) => ({
       success: login.success,
       error: login.error,
     })
   );
 
-  const { user, success, error } = useSelector(selectLogin);
+  const { success, error } = useSelector(selectLogin);
 
   const validation: any = useFormic({
     enableReinitialize: true,
 
     initialValues: {
-      email: user.email || "admin" || "",
-      password: user.password || "admin" || "",
+      username: "developer",
+      password: "admin",
     },
     validationSchema: Yup.object({
-      email: Yup.string().required("Please Enter Your email"),
-      password: Yup.string().required("Please Enter Your Password"),
+      username: Yup.string().required("Nhập tên đăng nhập"),
+      password: Yup.string().required("Nhập mật khẩu"),
     }),
     onSubmit: (values: any) => {
       dispatch(loginUser(values, props.router.navigate));
@@ -87,7 +82,6 @@ const Login = (props: any) => {
     <React.Fragment>
       <div className="relative">
         <AuthIcon />
-        <ToastContainer closeButton={false} limit={1} />
 
         <div className="mb-0 w-screen lg:mx-auto lg:w-[500px] card shadow-lg border-none shadow-slate-100 relative">
           <div className="!px-10 !py-12 card-body">
@@ -144,21 +138,21 @@ const Login = (props: any) => {
                   htmlFor="email"
                   className="inline-block mb-2 text-base font-medium"
                 >
-                  Username/ Email ID
+                  Username
                 </label>
                 <input
                   type="text"
-                  id="email"
-                  name="email"
+                  id="username"
+                  name="username"
                   className="form-input border-slate-200 dark:border-zink-500 focus:outline-none focus:border-custom-500 disabled:bg-slate-100 dark:disabled:bg-zink-600 disabled:border-slate-300 dark:disabled:border-zink-500 dark:disabled:text-zink-200 disabled:text-slate-500 dark:text-zink-100 dark:bg-zink-700 dark:focus:border-custom-800 placeholder:text-slate-400 dark:placeholder:text-zink-200"
-                  placeholder="Enter username or email"
+                  placeholder="Enter username"
                   onChange={validation.handleChange}
                   onBlur={validation.handleBlur}
-                  value={validation.values.email || ""}
+                  value={validation.values.username || ""}
                 />
-                {validation.touched.email && validation.errors.email ? (
-                  <div id="email-error" className="mt-1 text-sm text-red-500">
-                    {validation.errors.email}
+                {validation.touched.username && validation.errors.username ? (
+                  <div id="username-error" className="mt-1 text-sm text-red-500">
+                    {validation.errors.username}
                   </div>
                 ) : null}
               </div>

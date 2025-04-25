@@ -45,8 +45,11 @@ export const addUserList = createAsyncThunk(
       }
 
       toast.success("Thêm user thành công", { autoClose: 2000 });
+
+      const { id, code } = response.data;
       const data = {
-        id: response.data?.id,
+        id,
+        code,
         ...event,
       };
 
